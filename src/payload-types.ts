@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     movies: Movie;
+    favorites: Favorite;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -79,6 +80,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     movies: MoviesSelect<false> | MoviesSelect<true>;
+    favorites: FavoritesSelect<false> | FavoritesSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -194,6 +196,17 @@ export interface Movie {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "favorites".
+ */
+export interface Favorite {
+  id: string;
+  movie: string | Movie;
+  addedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -210,6 +223,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'movies';
         value: string | Movie;
+      } | null)
+    | ({
+        relationTo: 'favorites';
+        value: string | Favorite;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -311,6 +328,16 @@ export interface MoviesSelect<T extends boolean = true> {
   video?: T;
   qdrantId?: T;
   hasEmbedding?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "favorites_select".
+ */
+export interface FavoritesSelect<T extends boolean = true> {
+  movie?: T;
+  addedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

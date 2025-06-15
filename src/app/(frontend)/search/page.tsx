@@ -25,6 +25,14 @@ export default function SearchPage() {
     router.push(`/movie/${movieId}`)
   }
 
+  const handlePersonalRecommendations = () => {
+    router.push('/personal')
+  }
+
+  const handleFavoriteChange = () => {
+    // No special handling needed on search page
+  }
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -84,6 +92,18 @@ export default function SearchPage() {
         </div>
       </form>
 
+      <div className="personal-recommendations-section">
+        <button
+          onClick={handlePersonalRecommendations}
+          className="personal-recommendations-button"
+        >
+          ✨ Persoonlijke Aanbevelingen
+        </button>
+        <p className="personal-recommendations-description">
+          Krijg gepersonaliseerde filmsuggges op basis van je favorieten
+        </p>
+      </div>
+
       {error && (
         <div className="error-message">
           <p>{error}</p>
@@ -107,6 +127,7 @@ export default function SearchPage() {
               key={movie.id} 
               movie={movie} 
               onClick={handleMovieClick}
+              onFavoriteChange={handleFavoriteChange}
             />
           ))}
         </CardGrid>
@@ -144,6 +165,46 @@ export default function SearchPage() {
 
         .search-form {
           margin-bottom: 2rem;
+        }
+
+        .personal-recommendations-section {
+          text-align: center;
+          margin-bottom: 2rem;
+          padding: 2rem;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 12px;
+          color: white;
+        }
+
+        .personal-recommendations-button {
+          padding: 1rem 2rem;
+          font-size: 1.1rem;
+          background-color: rgba(255, 255, 255, 0.9);
+          color: #667eea;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+        }
+
+        .personal-recommendations-button:hover:not(:disabled) {
+          background-color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .personal-recommendations-button:disabled {
+          background-color: rgba(255, 255, 255, 0.6);
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .personal-recommendations-description {
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 1rem;
+          margin: 0;
         }
 
         .search-input-group {

@@ -207,6 +207,7 @@ export default function MoviePage({ params }: { params: { id: string } }) {
                 movie={recMovie} 
                 onClick={handleMovieClick}
                 showOverview={true}
+                onFavoriteChange={() => {}} // Empty handler for movie detail page
               />
             ))}
           </CardGrid>

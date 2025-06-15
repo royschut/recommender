@@ -10,6 +10,7 @@ import sharp from 'sharp'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Movies } from './collections/Movies'
+import { Favorites } from './collections/Favorites'
 import importsHandler from './app/handlers/importsHandler'
 import embeddingsHandler from './app/handlers/embeddingsHandler'
 
@@ -35,7 +36,7 @@ export default buildConfig({
       handler: embeddingsHandler,
     },
   ],
-  collections: [Users, Media, Movies],
+  collections: [Users, Media, Movies, Favorites],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

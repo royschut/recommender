@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 
 export interface Movie {
@@ -21,9 +21,64 @@ interface MovieCardProps {
   movie: Movie
   onClick?: (movieId: string) => void
   showOverview?: boolean
+  onFavoriteChange?: () => void
 }
 
-export function MovieCard({ movie, onClick, showOverview = true }: MovieCardProps) {
+export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChange }: MovieCardProps) {
+  const [isFavorite, setIsFavorite] = useState(false)
+  const [favoriteLoading, setFavoriteLoading] = useState(false)
+
+  // Check if movie is in favorites on component mount
+  useEffect(() => {
+    checkFavoriteStatus()
+  }, [movie.id])
+
+  const checkFavoriteStatus = async () => {
+    try {
+      const response = await fetch('/api/favorites')
+      const data = await response.json()
+      
+      if (data.success) {
+        const isInFavorites = data.favorites.some((fav: any) => 
+          String(fav.movie?.id) === String(movie.id) || String(fav.movie) === String(movie.id)
+        )
+        setIsFavorite(isInFavorites)
+      }
+    } catch (error) {
+      console.error('Error checking favorite status:', error)
+    }
+  }
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click when clicking favorite button
+    
+    setFavoriteLoading(true)
+    try {
+      const response = await fetch('/api/favorites', {
+        method: isFavorite ? 'DELETE' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ movieId: movie.id }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setIsFavorite(!isFavorite)
+        if (onFavoriteChange) {
+          onFavoriteChange()
+        }
+      } else {
+        console.error('Favorite operation failed:', data.error)
+        // You could show a toast notification here
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+    } finally {
+      setFavoriteLoading(false)
+    }
+  }
   const formatScore = (score?: number) => {
     return score ? (score * 100).toFixed(1) + '%' : 'N/A'
   }
@@ -80,6 +135,16 @@ export function MovieCard({ movie, onClick, showOverview = true }: MovieCardProp
             <span>Geen poster</span>
           </div>
         )}
+        
+        {/* Favorite button */}
+        <button 
+          className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
+          onClick={handleFavoriteClick}
+          disabled={favoriteLoading}
+          title={isFavorite ? 'Verwijder uit favorieten' : 'Voeg toe aan favorieten'}
+        >
+          {favoriteLoading ? '⏳' : (isFavorite ? '❤️' : '🤍')}
+        </button>
       </div>
 
       <div className="movie-info">
@@ -155,6 +220,41 @@ export function MovieCard({ movie, onClick, showOverview = true }: MovieCardProp
           display: flex;
           position: relative;
           background-color: #f5f5f5;
+        }
+
+        .favorite-btn {
+          position: absolute;
+          top: 0.75rem;
+          right: 0.75rem;
+          background: rgba(255, 255, 255, 0.9);
+          border: none;
+          border-radius: 50%;
+          width: 2.5rem;
+          height: 2.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.2rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          z-index: 10;
+        }
+
+        .favorite-btn:hover {
+          background: rgba(255, 255, 255, 1);
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .favorite-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.7;
+          transform: none;
+        }
+
+        .favorite-btn.favorited {
+          background: rgba(255, 240, 240, 0.95);
         }
 
         .poster-image {
