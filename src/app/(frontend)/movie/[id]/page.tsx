@@ -206,7 +206,7 @@ export default function MoviePage({ params }: { params: { id: string } }) {
                 key={recMovie.id} 
                 movie={recMovie} 
                 onClick={handleMovieClick}
-                showOverview={false}
+                showOverview={true}
               />
             ))}
           </CardGrid>
