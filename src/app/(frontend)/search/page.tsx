@@ -12,6 +12,10 @@ interface Movie {
   posterUrl?: string
   genres?: Array<{ genre: string }>
   voteAverage?: number
+  voteCount?: number
+  popularity?: number
+  originalLanguage?: string
+  adult?: boolean
   similarityScore?: number
 }
 
@@ -73,6 +77,32 @@ export default function SearchPage() {
 
   const formatGenres = (genres?: Array<{ genre: string }>) => {
     return genres?.map((g) => g.genre).join(', ') || 'Geen genres'
+  }
+
+  const formatLanguage = (lang?: string) => {
+    const languages: Record<string, string> = {
+      en: '🇺🇸 Engels',
+      nl: '🇳🇱 Nederlands',
+      fr: '🇫🇷 Frans',
+      de: '🇩🇪 Duits',
+      es: '🇪🇸 Spaans',
+      it: '🇮🇹 Italiaans',
+      ja: '🇯🇵 Japans',
+      ko: '🇰🇷 Koreaans',
+      zh: '🇨🇳 Chinees',
+      ru: '🇷🇺 Russisch',
+      pt: '🇵🇹 Portugees',
+      hi: '🇮🇳 Hindi',
+    }
+    return languages[lang || ''] || lang?.toUpperCase() || 'Onbekend'
+  }
+
+  const formatPopularity = (popularity?: number) => {
+    if (!popularity) return null
+    if (popularity > 100) return '🔥 Zeer populair'
+    if (popularity > 50) return '⭐ Populair'
+    if (popularity > 20) return '👍 Bekend'
+    return '💎 Niche'
   }
 
   return (
@@ -145,13 +175,30 @@ export default function SearchPage() {
                     Match: {formatScore(movie.similarityScore)}
                   </span>
                   {movie.voteAverage && (
-                    <span className="rating">⭐ {movie.voteAverage.toFixed(1)}/10</span>
+                    <span className="rating">
+                      ⭐ {movie.voteAverage.toFixed(1)}/10
+                      {movie.voteCount && (
+                        <span className="vote-count">
+                          ({movie.voteCount.toLocaleString()} stemmen)
+                        </span>
+                      )}
+                    </span>
                   )}
                   {movie.releaseDate && (
                     <span className="release-date">
-                      {new Date(movie.releaseDate).getFullYear()}
+                      📅 {new Date(movie.releaseDate).getFullYear()}
                     </span>
                   )}
+                </div>
+
+                <div className="movie-meta-secondary">
+                  {formatPopularity(movie.popularity) && (
+                    <span className="popularity">{formatPopularity(movie.popularity)}</span>
+                  )}
+                  {movie.originalLanguage && (
+                    <span className="language">{formatLanguage(movie.originalLanguage)}</span>
+                  )}
+                  {movie.adult && <span className="adult-indicator">🔞 18+</span>}
                 </div>
 
                 <p className="movie-genres">{formatGenres(movie.genres)}</p>
@@ -343,8 +390,16 @@ export default function SearchPage() {
           display: flex;
           flex-wrap: wrap;
           gap: 1rem;
-          margin-bottom: 1rem;
+          margin-bottom: 0.5rem;
           font-size: 0.9rem;
+        }
+
+        .movie-meta-secondary {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.8rem;
+          margin-bottom: 1rem;
+          font-size: 0.85rem;
         }
 
         .similarity-score {
@@ -358,10 +413,44 @@ export default function SearchPage() {
         .rating {
           color: #ff9500;
           font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 0.3rem;
+        }
+
+        .vote-count {
+          color: #666;
+          font-size: 0.8rem;
+          font-weight: normal;
         }
 
         .release-date {
           color: #555555;
+        }
+
+        .popularity {
+          background-color: #fff3cd;
+          color: #856404;
+          padding: 0.2rem 0.5rem;
+          border-radius: 3px;
+          font-size: 0.8rem;
+        }
+
+        .language {
+          background-color: #d1ecf1;
+          color: #0c5460;
+          padding: 0.2rem 0.5rem;
+          border-radius: 3px;
+          font-size: 0.8rem;
+        }
+
+        .adult-indicator {
+          background-color: #f8d7da;
+          color: #721c24;
+          padding: 0.2rem 0.5rem;
+          border-radius: 3px;
+          font-size: 0.8rem;
+          font-weight: 500;
         }
 
         .movie-genres {
