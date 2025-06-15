@@ -71,74 +71,110 @@ const importsHandler: PayloadHandler = async (req) => {
       errors.push(`Error fetching genres: ${genreError}`)
     }
 
-    // Clear existing movies first
+    console.log('Clearing existing movies...')
     try {
-      const deleteResult = await payload.delete({
-        collection: 'movies',
-        where: {}, // Empty where clause deletes all records
-      })
-
-      console.log(`Cleared ${deleteResult.docs.length} existing movies`)
-    } catch (clearError) {
-      errors.push(`Error clearing existing movies: ${clearError}`)
+      // Use direct MongoDB operation for fast clearing
+      const result = await payload.db.collections.movies.deleteMany({})
+      console.log(`Cleared ${result.deletedCount} existing movies (optimized)`)
+    } catch (clearError: any) {
+      // Fallback to Payload delete if direct access fails
+      try {
+        const deleteResult = await payload.delete({
+          collection: 'movies',
+          where: {},
+        })
+        console.log(`Cleared ${deleteResult.docs.length} existing movies (fallback)`)
+      } catch (fallbackError) {
+        errors.push(`Error clearing existing movies: ${fallbackError}`)
+      }
     }
 
     console.log(`Starting import of ${pagesToImport} pages from TMDB...`)
 
-    // Fetch specified number of pages
-    for (let page = 1; page <= pagesToImport; page++) {
-      try {
-        console.log(`Fetching page ${page} of ${pagesToImport}...`)
-        const url = `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&page=${page}`
-        const response = await fetch(url)
+    const PARALLEL_BATCH_SIZE = 5 // Fetch 5 pages simultaneously
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+    for (let i = 0; i < pagesToImport; i += PARALLEL_BATCH_SIZE) {
+      const endPage = Math.min(i + PARALLEL_BATCH_SIZE, pagesToImport)
+      const currentBatch = Array.from({ length: endPage - i }, (_, index) => i + index + 1)
+
+      console.log(
+        `Fetching pages ${currentBatch[0]}-${currentBatch[currentBatch.length - 1]} of ${pagesToImport}...`,
+      )
+
+      // Fetch multiple pages in parallel
+      const pagePromises = currentBatch.map(async (page) => {
+        try {
+          const url = `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&page=${page}`
+          const response = await fetch(url)
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const data: TMDBResponse = await response.json()
+          return { page, data, success: true }
+        } catch (error: any) {
+          return { page, error: error.message, success: false }
+        }
+      })
+
+      // Wait for all pages in this batch to complete
+      const batchResults = await Promise.all(pagePromises)
+
+      // Process each successful page result
+      for (const result of batchResults) {
+        if (!result.success) {
+          errors.push(`Error fetching page ${result.page}: ${result.error}`)
+          continue
         }
 
-        const data: TMDBResponse = await response.json()
-
-        // Process each movie
-        for (const movie of data.results) {
-          try {
-            // Create poster URL directly from TMDB
+        try {
+          const moviesToInsert = result.data?.results.map((movie) => {
             const posterUrl = movie.poster_path
               ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
               : null
 
-            // Create new movie
-            await payload.create({
-              collection: 'movies',
-              data: {
-                tmdbId: movie.id,
-                title: movie.title,
-                originalTitle:
-                  movie.original_title !== movie.title ? movie.original_title : undefined,
-                overview: movie.overview || undefined,
-                releaseDate: movie.release_date || undefined,
-                posterUrl: posterUrl,
-                adult: movie.adult,
-                genres: movie.genre_ids
-                  .map((id) => genreMap[id])
-                  .filter(Boolean)
-                  .map((genre) => ({ genre })),
-                originalLanguage: movie.original_language,
-                popularity: movie.popularity,
-                voteAverage: movie.vote_average,
-                voteCount: movie.vote_count,
-                video: movie.video,
-              },
-            })
-            totalImported++
-          } catch (movieError) {
-            errors.push(`Error processing movie ${movie.title}: ${movieError}`)
-          }
-        }
+            return {
+              tmdbId: movie.id,
+              title: movie.title,
+              originalTitle:
+                movie.original_title !== movie.title ? movie.original_title : undefined,
+              overview: movie.overview || undefined,
+              releaseDate: movie.release_date || undefined,
+              posterUrl: posterUrl,
+              adult: movie.adult,
+              genres: movie.genre_ids
+                .map((id) => genreMap[id])
+                .filter(Boolean)
+                .map((genre) => ({ genre })),
+              originalLanguage: movie.original_language,
+              popularity: movie.popularity,
+              voteAverage: movie.vote_average,
+              voteCount: movie.vote_count,
+              video: movie.video,
+            }
+          })
 
-        // Add a small delay between requests to be respectful to the API
-        await new Promise((resolve) => setTimeout(resolve, 100))
-      } catch (pageError) {
-        errors.push(`Error fetching page ${page}: ${pageError}`)
+          if (moviesToInsert && moviesToInsert.length > 0) {
+            const insertPromises = moviesToInsert.map((movieData) =>
+              payload.create({
+                collection: 'movies',
+                data: movieData,
+              }),
+            )
+
+            await Promise.all(insertPromises)
+            totalImported += moviesToInsert.length
+            console.log(`  Page ${result.page}: inserted ${moviesToInsert.length} movies`)
+          }
+        } catch (batchError: any) {
+          errors.push(`Error batch inserting page ${result.page}: ${batchError.message}`)
+        }
+      }
+
+      // Small delay between parallel batches to be respectful to the API
+      if (endPage < pagesToImport) {
+        await new Promise((resolve) => setTimeout(resolve, 200))
       }
     }
 
