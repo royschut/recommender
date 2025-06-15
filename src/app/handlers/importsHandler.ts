@@ -85,49 +85,6 @@ const importsHandler: PayloadHandler = async (req) => {
 
     console.log(`Starting import of ${pagesToImport} pages from TMDB...`)
 
-    // Helper function to download and save an image
-    const downloadAndSaveImage = async (
-      imagePath: string,
-      movieTitle: string,
-      type: 'poster' | 'backdrop',
-    ) => {
-      try {
-        const imageUrl = `https://image.tmdb.org/t/p/w500${imagePath}`
-        const response = await fetch(imageUrl)
-
-        if (!response.ok) {
-          throw new Error(`Failed to download image: ${response.status}`)
-        }
-
-        const arrayBuffer = await response.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-
-        // Create a safe filename
-        const safeTitle = movieTitle.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
-        const extension = imagePath.split('.').pop() || 'jpg'
-        const filename = `${safeTitle}_${type}.${extension}`
-
-        // Save to media collection
-        const mediaDoc = await payload.create({
-          collection: 'media',
-          data: {
-            alt: `${movieTitle} ${type}`,
-          },
-          file: {
-            data: buffer,
-            mimetype: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
-            name: filename,
-            size: buffer.length,
-          },
-        })
-
-        return mediaDoc.id
-      } catch (error) {
-        console.error(`Error downloading ${type} for ${movieTitle}:`, error)
-        return null
-      }
-    }
-
     // Fetch specified number of pages
     for (let page = 1; page <= pagesToImport; page++) {
       try {
@@ -144,13 +101,10 @@ const importsHandler: PayloadHandler = async (req) => {
         // Process each movie
         for (const movie of data.results) {
           try {
-            // Download images if they exist
-            let posterId = null
-
-            if (movie.poster_path) {
-              posterId = await downloadAndSaveImage(movie.poster_path, movie.title, 'poster')
-              await new Promise((resolve) => setTimeout(resolve, 200)) // Small delay between image downloads
-            }
+            // Create poster URL directly from TMDB
+            const posterUrl = movie.poster_path
+              ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+              : null
 
             // Create new movie
             await payload.create({
@@ -162,7 +116,7 @@ const importsHandler: PayloadHandler = async (req) => {
                   movie.original_title !== movie.title ? movie.original_title : undefined,
                 overview: movie.overview || undefined,
                 releaseDate: movie.release_date || undefined,
-                poster: posterId || undefined,
+                posterUrl: posterUrl,
                 adult: movie.adult,
                 genres: movie.genre_ids
                   .map((id) => genreMap[id])

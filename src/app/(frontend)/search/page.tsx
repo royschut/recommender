@@ -9,10 +9,7 @@ interface Movie {
   originalTitle?: string
   overview?: string
   releaseDate?: string
-  poster?: {
-    url: string
-    alt: string
-  }
+  posterUrl?: string
   genres?: Array<{ genre: string }>
   voteAverage?: number
   similarityScore?: number
@@ -122,10 +119,10 @@ export default function SearchPage() {
           {results.map((movie) => (
             <div key={movie.id} className="movie-card">
               <div className="movie-poster">
-                {movie.poster?.url ? (
+                {movie.posterUrl ? (
                   <Image
-                    src={movie.poster.url}
-                    alt={movie.poster.alt || movie.title}
+                    src={movie.posterUrl}
+                    alt={movie.title}
                     width={200}
                     height={300}
                     className="poster-image"

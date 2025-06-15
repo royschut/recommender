@@ -39,11 +39,10 @@ export const Movies: CollectionConfig = {
       type: 'date',
     },
     {
-      name: 'poster',
-      type: 'upload',
-      relationTo: 'media',
+      name: 'posterUrl',
+      type: 'text',
       admin: {
-        description: 'Downloaded poster image',
+        description: 'Poster image URL',
       },
     },
     {

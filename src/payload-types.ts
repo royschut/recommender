@@ -166,9 +166,9 @@ export interface Movie {
   overview?: string | null;
   releaseDate?: string | null;
   /**
-   * Downloaded poster image
+   * Poster image URL
    */
-  poster?: (string | null) | Media;
+  posterUrl?: string | null;
   adult?: boolean | null;
   genres?:
     | {
@@ -296,7 +296,7 @@ export interface MoviesSelect<T extends boolean = true> {
   originalTitle?: T;
   overview?: T;
   releaseDate?: T;
-  poster?: T;
+  posterUrl?: T;
   adult?: T;
   genres?:
     | T
