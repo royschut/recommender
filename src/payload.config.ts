@@ -9,6 +9,9 @@ import sharp from 'sharp'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { Movies } from './collections/Movies'
+import importsHandler from './app/handlers/importsHandler'
+import embeddingsHandler from './app/handlers/embeddingsHandler'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -20,7 +23,19 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  endpoints: [
+    {
+      path: '/imports',
+      method: 'get',
+      handler: importsHandler,
+    },
+    {
+      path: '/embeddings',
+      method: 'get',
+      handler: embeddingsHandler,
+    },
+  ],
+  collections: [Users, Media, Movies],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

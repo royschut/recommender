@@ -62,6 +62,41 @@ Alternatively, you can use [Docker](https://www.docker.com) to spin up this temp
 
 That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
 
+## API Endpoints
+
+This project includes custom API endpoints for data management:
+
+### `/api/imports`
+
+Import movies from The Movie Database (TMDB) API. This endpoint fetches popular movies and their metadata.
+
+**Usage:** GET request to `http://localhost:3000/api/imports`
+
+### `/api/embeddings`
+
+Generate OpenAI embeddings for all movies and store them in Qdrant vector database. This endpoint:
+
+1. Loops through all movies in the database
+2. Creates text embeddings using OpenAI's `text-embedding-3-small` model
+3. Stores embeddings in Qdrant vector database
+4. Links the Qdrant vector ID back to the Movie record in Payload
+
+**Usage:** GET request to `http://localhost:3000/api/embeddings`
+
+**Prerequisites:**
+
+- OpenAI API key set in `OPEN_AI_API_KEY` environment variable
+- Qdrant instance running (included in docker-compose.yml)
+- Movies imported using the `/api/imports` endpoint
+
+**Environment Variables:**
+
+```
+OPEN_AI_API_KEY=your_openai_api_key
+QDRANT_API_KEY=your_qdrant_api_key
+QDRANT_URL=http://localhost:6333
+```
+
 ## Questions
 
 If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).

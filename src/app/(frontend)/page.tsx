@@ -30,6 +30,12 @@ export default async function HomePage() {
         {!user && <h1>Welcome to your new project.</h1>}
         {user && <h1>Welcome back, {user.email}</h1>}
         <div className="links">
+          <a className="search" href="/search">
+            🔍 Film Zoeken met AI
+          </a>
+          <a className="admin-local" href="/database-admin">
+            ⚙️ Database Beheer
+          </a>
           <a
             className="admin"
             href={payloadConfig.routes.admin}
