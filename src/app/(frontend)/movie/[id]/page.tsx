@@ -3,22 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-
-interface Movie {
-  id: string
-  title: string
-  originalTitle?: string
-  overview?: string
-  releaseDate?: string
-  posterUrl?: string
-  genres?: Array<{ genre: string }>
-  voteAverage?: number
-  voteCount?: number
-  popularity?: number
-  originalLanguage?: string
-  adult?: boolean
-  similarityScore?: number
-}
+import { MovieCard, CardGrid, type Movie } from '@/components/MovieCard'
 
 interface RecommendationsResponse {
   success: boolean
@@ -74,10 +59,6 @@ export default function MoviePage({ params }: { params: { id: string } }) {
 
   const handleBackToSearch = () => {
     router.push('/search')
-  }
-
-  const formatScore = (score?: number) => {
-    return score ? (score * 100).toFixed(1) + '%' : 'N/A'
   }
 
   const formatGenres = (genres?: Array<{ genre: string }>) => {
@@ -219,54 +200,16 @@ export default function MoviePage({ params }: { params: { id: string } }) {
         {recommendations.length === 0 ? (
           <p className="no-recommendations">Geen soortgelijke films gevonden.</p>
         ) : (
-          <div className="recommendations-grid">
+          <CardGrid>
             {recommendations.map((recMovie) => (
-              <div
-                key={recMovie.id}
-                className="movie-card"
-                onClick={() => handleMovieClick(recMovie.id)}
-              >
-                <div className="movie-poster">
-                  {recMovie.posterUrl ? (
-                    <Image
-                      src={recMovie.posterUrl}
-                      alt={recMovie.title}
-                      width={200}
-                      height={300}
-                      className="poster-image"
-                    />
-                  ) : (
-                    <div className="poster-placeholder">
-                      <span>Geen poster</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="movie-info">
-                  <h3 className="movie-title">{recMovie.title}</h3>
-                  {recMovie.originalTitle && recMovie.originalTitle !== recMovie.title && (
-                    <p className="original-title">({recMovie.originalTitle})</p>
-                  )}
-
-                  <div className="movie-meta">
-                    <span className="similarity-score">
-                      Match: {formatScore(recMovie.similarityScore)}
-                    </span>
-                    {recMovie.voteAverage && (
-                      <span className="rating">⭐ {recMovie.voteAverage.toFixed(1)}/10</span>
-                    )}
-                    {recMovie.releaseDate && (
-                      <span className="release-date">
-                        📅 {new Date(recMovie.releaseDate).getFullYear()}
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="movie-genres">{formatGenres(recMovie.genres)}</p>
-                </div>
-              </div>
+              <MovieCard 
+                key={recMovie.id} 
+                movie={recMovie} 
+                onClick={handleMovieClick}
+                showOverview={false}
+              />
             ))}
-          </div>
+          </CardGrid>
         )}
       </div>
 
@@ -463,110 +406,6 @@ export default function MoviePage({ params }: { params: { id: string } }) {
           padding: 2rem;
         }
 
-        .recommendations-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .movie-card {
-          border: 1px solid #ddd;
-          border-radius: 12px;
-          overflow: hidden;
-          background: #ffffff;
-          color: #333333;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          transition:
-            transform 0.2s,
-            box-shadow 0.2s;
-          cursor: pointer;
-        }
-
-        .movie-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .movie-poster {
-          width: 100%;
-          height: 200px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: #f5f5f5;
-        }
-
-        .poster-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .poster-placeholder {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: #f0f0f0;
-          color: #999;
-          font-size: 0.9rem;
-        }
-
-        .movie-info {
-          padding: 1.25rem;
-        }
-
-        .movie-info .movie-title {
-          font-size: 1.2rem;
-          font-weight: 600;
-          color: #222222;
-          margin-bottom: 0.5rem;
-          line-height: 1.3;
-        }
-
-        .movie-info .original-title {
-          font-size: 0.85rem;
-          color: #555555;
-          font-style: italic;
-          margin-bottom: 0.75rem;
-        }
-
-        .movie-info .movie-meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.75rem;
-          margin-bottom: 0.75rem;
-          font-size: 0.85rem;
-        }
-
-        .similarity-score {
-          background-color: #e7f3ff;
-          color: #0066cc;
-          padding: 0.25rem 0.5rem;
-          border-radius: 4px;
-          font-weight: 500;
-          font-size: 0.8rem;
-        }
-
-        .movie-info .rating {
-          color: #ff9500;
-          font-weight: 500;
-          font-size: 0.85rem;
-        }
-
-        .movie-info .release-date {
-          color: #555555;
-          font-size: 0.85rem;
-        }
-
-        .movie-info .movie-genres {
-          font-size: 0.85rem;
-          color: #007bff;
-          margin-bottom: 0;
-          font-weight: 500;
-        }
-
         @media (max-width: 768px) {
           .container {
             padding: 1rem;
@@ -584,10 +423,6 @@ export default function MoviePage({ params }: { params: { id: string } }) {
 
           .movie-title {
             font-size: 2rem;
-          }
-
-          .recommendations-grid {
-            grid-template-columns: 1fr;
           }
         }
       `}</style>

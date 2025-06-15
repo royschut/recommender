@@ -1,24 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-
-interface Movie {
-  id: string
-  title: string
-  originalTitle?: string
-  overview?: string
-  releaseDate?: string
-  posterUrl?: string
-  genres?: Array<{ genre: string }>
-  voteAverage?: number
-  voteCount?: number
-  popularity?: number
-  originalLanguage?: string
-  adult?: boolean
-  similarityScore?: number
-}
+import { MovieCard, CardGrid, type Movie } from '@/components/MovieCard'
 
 interface SearchResponse {
   success: boolean
@@ -77,40 +61,6 @@ export default function SearchPage() {
     }
   }
 
-  const formatScore = (score?: number) => {
-    return score ? (score * 100).toFixed(1) + '%' : 'N/A'
-  }
-
-  const formatGenres = (genres?: Array<{ genre: string }>) => {
-    return genres?.map((g) => g.genre).join(', ') || 'Geen genres'
-  }
-
-  const formatLanguage = (lang?: string) => {
-    const languages: Record<string, string> = {
-      en: '🇺🇸 Engels',
-      nl: '🇳🇱 Nederlands',
-      fr: '🇫🇷 Frans',
-      de: '🇩🇪 Duits',
-      es: '🇪🇸 Spaans',
-      it: '🇮🇹 Italiaans',
-      ja: '🇯🇵 Japans',
-      ko: '🇰🇷 Koreaans',
-      zh: '🇨🇳 Chinees',
-      ru: '🇷🇺 Russisch',
-      pt: '🇵🇹 Portugees',
-      hi: '🇮🇳 Hindi',
-    }
-    return languages[lang || ''] || lang?.toUpperCase() || 'Onbekend'
-  }
-
-  const formatPopularity = (popularity?: number) => {
-    if (!popularity) return null
-    if (popularity > 100) return '🔥 Zeer populair'
-    if (popularity > 50) return '⭐ Populair'
-    if (popularity > 20) return '👍 Bekend'
-    return '💎 Niche'
-  }
-
   return (
     <div className="search-container">
       <div className="search-header">
@@ -151,69 +101,15 @@ export default function SearchPage() {
       )}
 
       {results.length > 0 && (
-        <div className="results-grid">
+        <CardGrid>
           {results.map((movie) => (
-            <div key={movie.id} className="movie-card" onClick={() => handleMovieClick(movie.id)}>
-              <div className="movie-poster">
-                {movie.posterUrl ? (
-                  <Image
-                    src={movie.posterUrl}
-                    alt={movie.title}
-                    width={200}
-                    height={300}
-                    className="poster-image"
-                  />
-                ) : (
-                  <div className="poster-placeholder">
-                    <span>Geen poster</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="movie-info">
-                <h3 className="movie-title">{movie.title}</h3>
-                {movie.originalTitle && movie.originalTitle !== movie.title && (
-                  <p className="original-title">({movie.originalTitle})</p>
-                )}
-
-                <div className="movie-meta">
-                  <span className="similarity-score">
-                    Match: {formatScore(movie.similarityScore)}
-                  </span>
-                  {movie.voteAverage && (
-                    <span className="rating">
-                      ⭐ {movie.voteAverage.toFixed(1)}/10
-                      {movie.voteCount && (
-                        <span className="vote-count">
-                          ({movie.voteCount.toLocaleString()} stemmen)
-                        </span>
-                      )}
-                    </span>
-                  )}
-                  {movie.releaseDate && (
-                    <span className="release-date">
-                      📅 {new Date(movie.releaseDate).getFullYear()}
-                    </span>
-                  )}
-                </div>
-
-                <div className="movie-meta-secondary">
-                  {formatPopularity(movie.popularity) && (
-                    <span className="popularity">{formatPopularity(movie.popularity)}</span>
-                  )}
-                  {movie.originalLanguage && (
-                    <span className="language">{formatLanguage(movie.originalLanguage)}</span>
-                  )}
-                  {movie.adult && <span className="adult-indicator">🔞 18+</span>}
-                </div>
-
-                <p className="movie-genres">{formatGenres(movie.genres)}</p>
-
-                {movie.overview && <p className="movie-overview">{movie.overview}</p>}
-              </div>
-            </div>
+            <MovieCard 
+              key={movie.id} 
+              movie={movie} 
+              onClick={handleMovieClick}
+            />
           ))}
-        </div>
+        </CardGrid>
       )}
 
       <style jsx>{`
@@ -324,155 +220,6 @@ export default function SearchPage() {
           border-radius: 8px;
         }
 
-        .results-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 2rem;
-        }
-
-        .movie-card {
-          border: 1px solid #ddd;
-          border-radius: 12px;
-          overflow: hidden;
-          background: #ffffff;
-          color: #333333;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          transition:
-            transform 0.2s,
-            box-shadow 0.2s;
-          cursor: pointer;
-        }
-
-        .movie-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .movie-poster {
-          width: 100%;
-          align-items: center;
-          justify-content: center;
-          display: flex;
-          position: relative;
-          background-color: #f5f5f5;
-        }
-
-        .poster-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .poster-placeholder {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: #f0f0f0;
-          color: #999;
-          font-size: 0.9rem;
-        }
-
-        .movie-info {
-          padding: 1.5rem;
-        }
-
-        .movie-title {
-          font-size: 1.3rem;
-          font-weight: 600;
-          color: #222222;
-          margin-bottom: 0.5rem;
-          line-height: 1.3;
-        }
-
-        .original-title {
-          font-size: 0.9rem;
-          color: #555555;
-          font-style: italic;
-          margin-bottom: 1rem;
-        }
-
-        .movie-meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          margin-bottom: 0.5rem;
-          font-size: 0.9rem;
-        }
-
-        .movie-meta-secondary {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.8rem;
-          margin-bottom: 1rem;
-          font-size: 0.85rem;
-        }
-
-        .similarity-score {
-          background-color: #e7f3ff;
-          color: #0066cc;
-          padding: 0.3rem 0.6rem;
-          border-radius: 4px;
-          font-weight: 500;
-        }
-
-        .rating {
-          color: #ff9500;
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 0.3rem;
-        }
-
-        .vote-count {
-          color: #666;
-          font-size: 0.8rem;
-          font-weight: normal;
-        }
-
-        .release-date {
-          color: #555555;
-        }
-
-        .popularity {
-          background-color: #fff3cd;
-          color: #856404;
-          padding: 0.2rem 0.5rem;
-          border-radius: 3px;
-          font-size: 0.8rem;
-        }
-
-        .language {
-          background-color: #d1ecf1;
-          color: #0c5460;
-          padding: 0.2rem 0.5rem;
-          border-radius: 3px;
-          font-size: 0.8rem;
-        }
-
-        .adult-indicator {
-          background-color: #f8d7da;
-          color: #721c24;
-          padding: 0.2rem 0.5rem;
-          border-radius: 3px;
-          font-size: 0.8rem;
-          font-weight: 500;
-        }
-
-        .movie-genres {
-          font-size: 0.9rem;
-          color: #007bff;
-          margin-bottom: 1rem;
-          font-weight: 500;
-        }
-
-        .movie-overview {
-          font-size: 0.7rem;
-          color: #444444;
-          line-height: 1.5;
-        }
-
         @media (max-width: 768px) {
           .search-container {
             padding: 1rem;
@@ -484,10 +231,6 @@ export default function SearchPage() {
 
           .search-input-group {
             flex-direction: column;
-          }
-
-          .results-grid {
-            grid-template-columns: 1fr;
           }
         }
       `}</style>
