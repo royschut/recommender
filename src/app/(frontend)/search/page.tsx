@@ -159,13 +159,7 @@ export default function SearchPage() {
 
                 <p className="movie-genres">{formatGenres(movie.genres)}</p>
 
-                {movie.overview && (
-                  <p className="movie-overview">
-                    {movie.overview.length > 200
-                      ? movie.overview.substring(0, 200) + '...'
-                      : movie.overview}
-                  </p>
-                )}
+                {movie.overview && <p className="movie-overview">{movie.overview}</p>}
               </div>
             </div>
           ))}
@@ -173,7 +167,14 @@ export default function SearchPage() {
       )}
 
       <style jsx>{`
+        * {
+          box-sizing: border-box;
+        }
+
         .search-container {
+          min-height: 100vh;
+          background-color: #ffffff;
+          color: #333333;
           max-width: 1200px;
           margin: 0 auto;
           padding: 2rem;
@@ -186,13 +187,13 @@ export default function SearchPage() {
 
         .search-header h1 {
           font-size: 2.5rem;
-          color: #333;
+          color: #222222;
           margin-bottom: 0.5rem;
         }
 
         .search-header p {
           font-size: 1.1rem;
-          color: #666;
+          color: #555555;
         }
 
         .search-form {
@@ -214,6 +215,8 @@ export default function SearchPage() {
           border-radius: 8px;
           outline: none;
           transition: border-color 0.2s;
+          background-color: #ffffff;
+          color: #333333;
         }
 
         .search-input:focus {
@@ -265,7 +268,10 @@ export default function SearchPage() {
           text-align: center;
           margin: 1rem 0 2rem 0;
           font-size: 1.1rem;
-          color: #666;
+          color: #555555;
+          background-color: #f8f9fa;
+          padding: 1rem;
+          border-radius: 8px;
         }
 
         .results-grid {
@@ -278,7 +284,8 @@ export default function SearchPage() {
           border: 1px solid #ddd;
           border-radius: 12px;
           overflow: hidden;
-          background: white;
+          background: #ffffff;
+          color: #333333;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           transition:
             transform 0.2s,
@@ -292,7 +299,9 @@ export default function SearchPage() {
 
         .movie-poster {
           width: 100%;
-          height: 300px;
+          align-items: center;
+          justify-content: center;
+          display: flex;
           position: relative;
           background-color: #f5f5f5;
         }
@@ -321,14 +330,14 @@ export default function SearchPage() {
         .movie-title {
           font-size: 1.3rem;
           font-weight: 600;
-          color: #333;
+          color: #222222;
           margin-bottom: 0.5rem;
           line-height: 1.3;
         }
 
         .original-title {
           font-size: 0.9rem;
-          color: #666;
+          color: #555555;
           font-style: italic;
           margin-bottom: 1rem;
         }
@@ -355,7 +364,7 @@ export default function SearchPage() {
         }
 
         .release-date {
-          color: #666;
+          color: #555555;
         }
 
         .movie-genres {
@@ -366,8 +375,8 @@ export default function SearchPage() {
         }
 
         .movie-overview {
-          font-size: 0.9rem;
-          color: #666;
+          font-size: 0.7rem;
+          color: #444444;
           line-height: 1.5;
         }
 

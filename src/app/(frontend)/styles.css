@@ -121,11 +121,6 @@ svg {
     align-items: center;
     gap: 12px;
 
-    @media (max-width: 768px) {
-      flex-direction: column;
-      gap: 8px;
-    }
-
     a {
       text-decoration: none;
       padding: 0.25rem 0.5rem;
@@ -136,13 +131,6 @@ svg {
       color: rgb(0, 0, 0);
       background: rgb(1000, 1000, 1000);
       border: 1px solid rgb(0, 0, 0);
-    }
-
-    .admin-local {
-      color: rgb(1000, 1000, 1000);
-      background: rgb(200, 100, 0);
-      border: 1px solid rgb(255, 150, 0);
-      font-weight: 500;
     }
 
     .search {

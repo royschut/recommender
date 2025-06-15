@@ -193,7 +193,14 @@ export default function AdminPage() {
       </div>
 
       <style jsx>{`
+        * {
+          box-sizing: border-box;
+        }
+
         .admin-container {
+          min-height: 100vh;
+          background-color: #ffffff;
+          color: #333333;
           max-width: 800px;
           margin: 0 auto;
           padding: 2rem;
@@ -201,9 +208,10 @@ export default function AdminPage() {
         }
 
         h1 {
-          color: #333;
+          color: #222222;
           border-bottom: 2px solid #007bff;
           padding-bottom: 0.5rem;
+          margin-bottom: 1rem;
         }
 
         .admin-section {
@@ -212,11 +220,13 @@ export default function AdminPage() {
           border: 1px solid #ddd;
           border-radius: 8px;
           background: #f9f9f9;
+          color: #333333;
         }
 
-        .admin-section h2 {
+        .admin-section h2,
+        .admin-section h3 {
           margin-top: 0;
-          color: #555;
+          color: #333333;
         }
 
         .import-controls {
@@ -226,17 +236,20 @@ export default function AdminPage() {
           margin: 1rem 0;
         }
 
-        .import-controls label {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
         .import-controls input {
           padding: 0.5rem;
           border: 1px solid #ccc;
           border-radius: 4px;
           width: 100px;
+          background-color: #ffffff;
+          color: #333333;
+        }
+
+        .import-controls label {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          color: #333333;
         }
 
         .import-button,
@@ -295,11 +308,13 @@ export default function AdminPage() {
 
         details {
           margin-top: 0.5rem;
+          color: #333333;
         }
 
         summary {
           cursor: pointer;
           font-weight: 500;
+          color: #333333;
         }
 
         ul {
@@ -310,6 +325,7 @@ export default function AdminPage() {
         li {
           margin: 0.25rem 0;
           font-size: 0.9rem;
+          color: #333333;
         }
 
         a {
