@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 interface Movie {
   id: string
@@ -34,6 +35,11 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchPerformed, setSearchPerformed] = useState(false)
+  const router = useRouter()
+
+  const handleMovieClick = (movieId: string) => {
+    router.push(`/movie/${movieId}`)
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -147,7 +153,7 @@ export default function SearchPage() {
       {results.length > 0 && (
         <div className="results-grid">
           {results.map((movie) => (
-            <div key={movie.id} className="movie-card">
+            <div key={movie.id} className="movie-card" onClick={() => handleMovieClick(movie.id)}>
               <div className="movie-poster">
                 {movie.posterUrl ? (
                   <Image
@@ -334,6 +340,7 @@ export default function SearchPage() {
           transition:
             transform 0.2s,
             box-shadow 0.2s;
+          cursor: pointer;
         }
 
         .movie-card:hover {
