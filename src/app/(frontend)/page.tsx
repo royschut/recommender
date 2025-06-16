@@ -33,6 +33,12 @@ export default async function HomePage() {
           <a className="search" href="/search">
             🔍 Film Zoeken met AI
           </a>
+          <a className="favorites" href="/favorites">
+            ❤️ Mijn Favorieten
+          </a>
+          <a className="personal" href="/personal">
+            ✨ Persoonlijke Aanbevelingen
+          </a>
           <a className="admin-local" href="/database-admin">
             ⚙️ Database Beheer
           </a>

@@ -24,7 +24,12 @@ interface MovieCardProps {
   onFavoriteChange?: () => void
 }
 
-export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChange }: MovieCardProps) {
+export function MovieCard({
+  movie,
+  onClick,
+  showOverview = true,
+  onFavoriteChange,
+}: MovieCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
 
@@ -37,10 +42,11 @@ export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChang
     try {
       const response = await fetch('/api/favorites')
       const data = await response.json()
-      
+
       if (data.success) {
-        const isInFavorites = data.favorites.some((fav: any) => 
-          String(fav.movie?.id) === String(movie.id) || String(fav.movie) === String(movie.id)
+        const isInFavorites = data.favorites.some(
+          (fav: any) =>
+            String(fav.movie?.id) === String(movie.id) || String(fav.movie) === String(movie.id),
         )
         setIsFavorite(isInFavorites)
       }
@@ -51,7 +57,7 @@ export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChang
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card click when clicking favorite button
-    
+
     setFavoriteLoading(true)
     try {
       const response = await fetch('/api/favorites', {
@@ -89,18 +95,18 @@ export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChang
 
   const formatLanguage = (lang?: string) => {
     const languages: Record<string, string> = {
-      'en': '🇺🇸 Engels',
-      'nl': '🇳🇱 Nederlands', 
-      'fr': '🇫🇷 Frans',
-      'de': '🇩🇪 Duits',
-      'es': '🇪🇸 Spaans',
-      'it': '🇮🇹 Italiaans',
-      'ja': '🇯🇵 Japans',
-      'ko': '🇰🇷 Koreaans',
-      'zh': '🇨🇳 Chinees',
-      'ru': '🇷🇺 Russisch',
-      'pt': '🇵🇹 Portugees',
-      'hi': '🇮🇳 Hindi'
+      en: '🇺🇸 Engels',
+      nl: '🇳🇱 Nederlands',
+      fr: '🇫🇷 Frans',
+      de: '🇩🇪 Duits',
+      es: '🇪🇸 Spaans',
+      it: '🇮🇹 Italiaans',
+      ja: '🇯🇵 Japans',
+      ko: '🇰🇷 Koreaans',
+      zh: '🇨🇳 Chinees',
+      ru: '🇷🇺 Russisch',
+      pt: '🇵🇹 Portugees',
+      hi: '🇮🇳 Hindi',
     }
     return languages[lang || ''] || lang?.toUpperCase() || 'Onbekend'
   }
@@ -135,15 +141,15 @@ export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChang
             <span>Geen poster</span>
           </div>
         )}
-        
+
         {/* Favorite button */}
-        <button 
+        <button
           className={`favorite-btn ${isFavorite ? 'favorited' : ''}`}
           onClick={handleFavoriteClick}
           disabled={favoriteLoading}
           title={isFavorite ? 'Verwijder uit favorieten' : 'Voeg toe aan favorieten'}
         >
-          {favoriteLoading ? '⏳' : (isFavorite ? '❤️' : '🤍')}
+          {favoriteLoading ? '⏳' : isFavorite ? '❤️' : '🤍'}
         </button>
       </div>
 
@@ -155,9 +161,7 @@ export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChang
 
         <div className="movie-meta">
           {movie.similarityScore !== undefined && (
-            <span className="similarity-score">
-              Match: {formatScore(movie.similarityScore)}
-            </span>
+            <span className="similarity-score">Match: {formatScore(movie.similarityScore)}</span>
           )}
           {movie.voteAverage && (
             <span className="rating">
@@ -168,9 +172,7 @@ export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChang
             </span>
           )}
           {movie.releaseDate && (
-            <span className="release-date">
-              📅 {new Date(movie.releaseDate).getFullYear()}
-            </span>
+            <span className="release-date">📅 {new Date(movie.releaseDate).getFullYear()}</span>
           )}
         </div>
 
@@ -181,16 +183,12 @@ export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChang
           {movie.originalLanguage && (
             <span className="language">{formatLanguage(movie.originalLanguage)}</span>
           )}
-          {movie.adult && (
-            <span className="adult-indicator">🔞 18+</span>
-          )}
+          {movie.adult && <span className="adult-indicator">🔞 18+</span>}
         </div>
 
         <p className="movie-genres">{formatGenres(movie.genres)}</p>
 
-        {showOverview && movie.overview && (
-          <p className="movie-overview">{movie.overview}</p>
-        )}
+        {showOverview && movie.overview && <p className="movie-overview">{movie.overview}</p>}
       </div>
 
       <style jsx>{`
@@ -201,7 +199,9 @@ export function MovieCard({ movie, onClick, showOverview = true, onFavoriteChang
           background: #ffffff;
           color: #333333;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          transition: transform 0.2s, box-shadow 0.2s;
+          transition:
+            transform 0.2s,
+            box-shadow 0.2s;
         }
 
         .movie-card.clickable {

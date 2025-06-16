@@ -29,6 +29,10 @@ export default function SearchPage() {
     router.push('/personal')
   }
 
+  const handleFavoritesPage = () => {
+    router.push('/favorites')
+  }
+
   const handleFavoriteChange = () => {
     // No special handling needed on search page
   }
@@ -92,16 +96,25 @@ export default function SearchPage() {
         </div>
       </form>
 
-      <div className="personal-recommendations-section">
-        <button
-          onClick={handlePersonalRecommendations}
-          className="personal-recommendations-button"
-        >
-          ✨ Persoonlijke Aanbevelingen
-        </button>
-        <p className="personal-recommendations-description">
-          Krijg gepersonaliseerde filmsuggges op basis van je favorieten
-        </p>
+      <div className="action-sections">
+        <div className="favorites-section">
+          <button onClick={handleFavoritesPage} className="favorites-button">
+            ❤️ Mijn Favorieten
+          </button>
+          <p className="section-description">Bekijk en beheer je favoriete films</p>
+        </div>
+
+        <div className="personal-recommendations-section">
+          <button
+            onClick={handlePersonalRecommendations}
+            className="personal-recommendations-button"
+          >
+            ✨ Persoonlijke Aanbevelingen
+          </button>
+          <p className="section-description">
+            Krijg gepersonaliseerde filmsuggties op basis van je favorieten
+          </p>
+        </div>
       </div>
 
       {error && (
@@ -123,9 +136,9 @@ export default function SearchPage() {
       {results.length > 0 && (
         <CardGrid>
           {results.map((movie) => (
-            <MovieCard 
-              key={movie.id} 
-              movie={movie} 
+            <MovieCard
+              key={movie.id}
+              movie={movie}
               onClick={handleMovieClick}
               onFavoriteChange={handleFavoriteChange}
             />
@@ -167,20 +180,34 @@ export default function SearchPage() {
           margin-bottom: 2rem;
         }
 
+        .action-sections {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .favorites-section,
         .personal-recommendations-section {
           text-align: center;
-          margin-bottom: 2rem;
           padding: 2rem;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           border-radius: 12px;
           color: white;
         }
 
+        .favorites-section {
+          background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        }
+
+        .personal-recommendations-section {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .favorites-button,
         .personal-recommendations-button {
           padding: 1rem 2rem;
           font-size: 1.1rem;
           background-color: rgba(255, 255, 255, 0.9);
-          color: #667eea;
           border: none;
           border-radius: 8px;
           cursor: pointer;
@@ -189,19 +216,22 @@ export default function SearchPage() {
           margin-bottom: 0.5rem;
         }
 
-        .personal-recommendations-button:hover:not(:disabled) {
+        .favorites-button {
+          color: #dc3545;
+        }
+
+        .personal-recommendations-button {
+          color: #667eea;
+        }
+
+        .favorites-button:hover,
+        .personal-recommendations-button:hover {
           background-color: white;
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .personal-recommendations-button:disabled {
-          background-color: rgba(255, 255, 255, 0.6);
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .personal-recommendations-description {
+        .section-description {
           color: rgba(255, 255, 255, 0.9);
           font-size: 1rem;
           margin: 0;
@@ -288,6 +318,11 @@ export default function SearchPage() {
 
           .search-header h1 {
             font-size: 2rem;
+          }
+
+          .action-sections {
+            grid-template-columns: 1fr;
+            gap: 1rem;
           }
 
           .search-input-group {

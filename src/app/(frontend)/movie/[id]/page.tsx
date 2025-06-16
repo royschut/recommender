@@ -202,9 +202,9 @@ export default function MoviePage({ params }: { params: { id: string } }) {
         ) : (
           <CardGrid>
             {recommendations.map((recMovie) => (
-              <MovieCard 
-                key={recMovie.id} 
-                movie={recMovie} 
+              <MovieCard
+                key={recMovie.id}
+                movie={recMovie}
                 onClick={handleMovieClick}
                 showOverview={true}
                 onFavoriteChange={() => {}} // Empty handler for movie detail page
