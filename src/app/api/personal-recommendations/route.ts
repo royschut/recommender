@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { QdrantClient } from '@qdrant/js-client-rest'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import OpenAI from 'openai'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPEN_AI_API_KEY,
-})
 
 export async function POST() {
   try {
@@ -38,53 +33,42 @@ export async function POST() {
     // Extract movie data from favorites
     const favoriteMovies = favorites.docs.map((fav: any) => fav.movie).filter(Boolean)
 
-    // Create a combined text from all favorite movies for embedding
-    const favoriteTexts = favoriteMovies.map((movie: any) => {
-      const genres = movie.genres?.map((g: any) => g.genre).join(', ') || ''
-      return `${movie.title} (${movie.originalTitle || movie.title}) - ${genres} - ${movie.overview || ''}`
-    })
+    // Get Qdrant IDs from favorite movies that have embeddings
+    const favoriteQdrantIds = favoriteMovies
+      .filter((movie: any) => movie.qdrantId && movie.hasEmbedding)
+      .map((movie: any) => parseInt(movie.qdrantId))
 
-    // Combine all favorite movie descriptions
-    const combinedText = favoriteTexts.join(' | ')
+    if (favoriteQdrantIds.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            'No favorite movies with embeddings found. Please add movies to your favorites or wait for embeddings to be generated.',
+          favoriteCount: favoriteMovies.length,
+          embeddedCount: 0,
+        },
+        { status: 400 },
+      )
+    }
 
-    // Create embedding for the combined preferences
-    const embeddingResponse = await openai.embeddings.create({
-      model: 'text-embedding-3-small',
-      input: combinedText,
-      encoding_format: 'float',
-    })
-
-    const preferenceVector = embeddingResponse.data[0].embedding
-
-    // Get movie IDs of favorites to exclude them from recommendations
-    const favoriteMovieIds = favoriteMovies.map((movie: any) => String(movie.id))
-
-    // Search for similar movies based on preferences
-    const searchResults = await qdrant.search(collectionName, {
-      vector: preferenceVector,
-      limit: 20, // Get more results to filter out favorites
+    // Use Qdrant recommend API with favorite movie vectors as positive examples
+    const recommendResults = await qdrant.recommend(collectionName, {
+      positive: favoriteQdrantIds,
+      limit: 10,
       with_payload: true,
-      filter: {
-        must_not: favoriteMovieIds.map((movieId) => ({
-          key: 'movieId',
-          match: {
-            value: movieId,
-          },
-        })),
-      },
+      with_vector: true, // Include vectors to potentially save user profile later
     })
 
-    // Get movie IDs from search results
-    const recommendedMovieIds = searchResults
-      .map((result) => result.payload?.movieId)
+    // Get movie IDs from recommend results
+    const recommendedMovieIds = recommendResults
+      .map((result: any) => result.payload?.movieId)
       .filter(Boolean)
-      .slice(0, 10) // Take top 10 recommendations
 
     if (recommendedMovieIds.length === 0) {
       return NextResponse.json({
         success: true,
         recommendations: [],
         favoriteCount: favoriteMovies.length,
+        embeddedCount: favoriteQdrantIds.length,
         message: 'No personalized recommendations found based on your favorites',
       })
     }
@@ -102,22 +86,38 @@ export async function POST() {
 
     // Sort recommendations by similarity score
     const sortedRecommendations = recommendedMovieIds
-      .map((movieId) => {
-        const recMovie = recommendations.docs.find((m) => String(m.id) === movieId)
-        const searchResult = searchResults.find((r) => r.payload?.movieId === movieId)
+      .map((movieId: any) => {
+        const recMovie = recommendations.docs.find((m: any) => String(m.id) === movieId)
+        const recommendResult = recommendResults.find((r: any) => r.payload?.movieId === movieId)
         return {
           ...recMovie,
-          similarityScore: searchResult?.score || 0,
+          similarityScore: recommendResult?.score || 0,
         }
       })
       .filter(Boolean)
+
+    // Calculate user preference vector (average of favorite movie vectors)
+    const userProfileVector =
+      recommendResults.length > 0 && recommendResults[0].vector
+        ? recommendResults
+            .map((r: any) => r.vector || [])
+            .reduce((acc: number[], vec: number[]) => {
+              if (vec.length === 0) return acc
+              return acc.length === 0
+                ? [...vec]
+                : acc.map((val: number, i: number) => val + (vec[i] || 0))
+            }, [])
+            .map((val: number) => val / recommendResults.length)
+        : null
 
     return NextResponse.json({
       success: true,
       recommendations: sortedRecommendations,
       favoriteCount: favoriteMovies.length,
+      embeddedCount: favoriteQdrantIds.length,
       totalRecommendations: sortedRecommendations.length,
-      message: `Personalized recommendations based on your ${favoriteMovies.length} favorite movies`,
+      userProfileVector: userProfileVector, // Can be saved for future use
+      message: `Personalized recommendations based on ${favoriteQdrantIds.length} of your ${favoriteMovies.length} favorite movies`,
     })
   } catch (error: any) {
     console.error('Personal recommendations error:', error)
