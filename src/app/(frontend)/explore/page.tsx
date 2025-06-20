@@ -21,13 +21,11 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue
 }
 
-interface SearchResponse {
+interface ExploreResponse {
   success: boolean
-  query: string
   results: Movie[]
   totalFound: number
   conceptWeights?: Record<string, number>
-  conceptsEnabled?: boolean
   error?: string
   details?: string
 }
@@ -84,63 +82,139 @@ const conceptSliders: ConceptSlider[] = [
   },
 ]
 
-export default function SearchPage() {
-  const [query, setQuery] = useState('')
+export default function ExplorePage() {
   const [results, setResults] = useState<Movie[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [searchPerformed, setSearchPerformed] = useState(false)
+  const [sliders, setSliders] = useState<ConceptSlider[]>(conceptSliders)
+  const [explorePerformed, setExplorePerformed] = useState(false)
+  const [lastConceptWeights, setLastConceptWeights] = useState<Record<string, number>>({})
   const router = useRouter()
+
+  // Debounce slider changes for real-time exploration
+  const debouncedSliders = useDebounce(sliders, 500)
+
+  // Load initial random films on page load
+  useEffect(() => {
+    loadInitialFilms()
+  }, [])
+
+  // Perform explore when sliders change (if any slider is not neutral)
+  useEffect(() => {
+    const hasNonNeutralSlider = sliders.some((slider) => slider.value !== 0)
+    if (hasNonNeutralSlider) {
+      performExplore()
+    } else if (explorePerformed) {
+      // Load initial films again when all sliders are reset
+      loadInitialFilms()
+      setExplorePerformed(false)
+    }
+  }, [debouncedSliders])
+
+  const loadInitialFilms = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/explore?limit=12')
+
+      const data: ExploreResponse = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Er is een fout opgetreden bij het laden van films')
+      }
+
+      setResults(data.results || [])
+      setLastConceptWeights({})
+    } catch (err) {
+      console.error('Load initial films error:', err)
+      setError(err instanceof Error ? err.message : 'Er is een onbekende fout opgetreden')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const performExplore = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Prepare concept weights for the API
+      const conceptWeights = sliders.reduce(
+        (acc, slider) => {
+          acc[slider.id] = slider.value
+          return acc
+        },
+        {} as Record<string, number>,
+      )
+
+      // Build URL with query parameters
+      const searchParams = new URLSearchParams()
+      searchParams.set('limit', '12')
+
+      // Add concept weights as parameters
+      Object.entries(conceptWeights).forEach(([concept, weight]) => {
+        if (weight !== 0) {
+          searchParams.set(concept, weight.toString())
+        }
+      })
+
+      const response = await fetch(`/api/explore?${searchParams.toString()}`)
+
+      const data: ExploreResponse = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Er is een fout opgetreden bij het verkennen')
+      }
+
+      setResults(data.results || [])
+      setLastConceptWeights(data.conceptWeights || {})
+      setExplorePerformed(true)
+    } catch (err) {
+      console.error('Explore error:', err)
+      setError(err instanceof Error ? err.message : 'Er is een onbekende fout opgetreden')
+    } finally {
+      setLoading(false)
+    }
+  }, [sliders])
 
   const handleMovieClick = (movieId: string) => {
     router.push(`/movie/${movieId}`)
   }
 
-  const handlePersonalRecommendations = () => {
-    router.push('/personal')
-  }
-
-  const handleFavoritesPage = () => {
-    router.push('/favorites')
-  }
-
   const handleFavoriteChange = () => {
-    // No special handling needed on search page
+    // No special handling needed on explore page
   }
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSliderChange = (sliderId: string, value: number) => {
+    setSliders((prev) =>
+      prev.map((slider) => (slider.id === sliderId ? { ...slider, value } : slider)),
+    )
+  }
 
-    if (!query.trim()) {
-      setError('Voer een zoekterm in')
-      return
-    }
+  const resetSliders = () => {
+    setSliders((prev) => prev.map((slider) => ({ ...slider, value: 0 })))
+  }
 
+  const getRandomFilms = async () => {
     setLoading(true)
     setError(null)
-    setSearchPerformed(true)
 
     try {
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: query.trim(),
-          limit: 10,
-        }),
-      })
+      const response = await fetch('/api/explore?limit=12')
 
-      const data: SearchResponse = await response.json()
+      const data: ExploreResponse = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Er is een fout opgetreden bij het zoeken')
+        throw new Error(
+          data.error || 'Er is een fout opgetreden bij het laden van willekeurige films',
+        )
       }
 
       setResults(data.results || [])
+      setExplorePerformed(true)
     } catch (err) {
-      console.error('Search error:', err)
+      console.error('Random films error:', err)
       setError(err instanceof Error ? err.message : 'Er is een onbekende fout opgetreden')
     } finally {
       setLoading(false)
@@ -148,38 +222,89 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="search-container">
-      <div className="search-header">
-        <h1>Film Zoeken met AI</h1>
-        <p>Zoek naar films op basis van beschrijvingen, genres, of wat je maar wilt!</p>
+    <div className="explore-container">
+      <div className="explore-header">
+        <h1>🎛️ Film Explore</h1>
+        <p>Ontdek films door te spelen met concept sliders - geen zoekterm nodig!</p>
       </div>
 
-      <form onSubmit={handleSearch} className="search-form">
-        <div className="search-input-group">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Bijv. 'een spannende sci-fi film over ruimte' of 'romantische komedie'"
-            className="search-input"
-            disabled={loading}
-          />
-          <button type="submit" className="search-button" disabled={loading || !query.trim()}>
-            {loading ? 'Zoeken...' : 'Zoeken'}
-          </button>
+      {/* Concept Sliders */}
+      <div className="concept-sliders-container">
+        <div className="sliders-header">
+          <h3>🎭 Film Dimensies</h3>
+          <p>
+            Beweeg de sliders om films te ontdekken die passen bij je voorkeuren
+            {loading && <span className="real-time-loading"> • 🔄 Zoeken...</span>}
+          </p>
+          <div className="slider-controls">
+            <button onClick={resetSliders} className="reset-button" type="button">
+              🔄 Reset Sliders
+            </button>
+            <button onClick={getRandomFilms} className="random-button" type="button">
+              🎲 Willekeurige Films
+            </button>
+          </div>
         </div>
-      </form>
 
+        <div className="sliders-grid">
+          {sliders.map((slider) => (
+            <div key={slider.id} className="slider-container">
+              <div className="slider-header">
+                <span className="slider-icon">{slider.icon}</span>
+                <h4 className="slider-title">{slider.label}</h4>
+                <span className="slider-value">
+                  {slider.value === 0
+                    ? 'Neutraal'
+                    : slider.value > 0
+                      ? `+${(slider.value * 100).toFixed(0)}%`
+                      : `${(slider.value * 100).toFixed(0)}%`}
+                </span>
+              </div>
+
+              <div className="slider-labels">
+                <span className="left-label">{slider.leftLabel}</span>
+                <span className="right-label">{slider.rightLabel}</span>
+              </div>
+
+              <input
+                type="range"
+                min="-1"
+                max="1"
+                step="0.1"
+                value={slider.value}
+                onChange={(e) => handleSliderChange(slider.id, parseFloat(e.target.value))}
+                className="concept-slider"
+                disabled={loading}
+              />
+
+              <div className="slider-markers">
+                <span className="marker left">←</span>
+                <span className="marker center">●</span>
+                <span className="marker right">→</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="concept-explanation">
+          <p>
+            💡 <strong>Tip:</strong> Beweeg de sliders om verschillende soorten films te ontdekken.
+            Hoe verder van het midden, hoe sterker de invloed op de resultaten!
+          </p>
+        </div>
+      </div>
+
+      {/* Navigation */}
       <div className="action-sections">
-        <div className="explore-section">
-          <button onClick={() => router.push('/explore')} className="explore-button">
-            🎛️ Explore Films
+        <div className="search-section">
+          <button onClick={() => router.push('/search')} className="search-button">
+            🔍 Zoeken met Tekst
           </button>
-          <p className="section-description">Ontdek films met concept sliders, zonder zoekterm</p>
+          <p className="section-description">Zoek naar specifieke films met een zoekterm</p>
         </div>
 
         <div className="favorites-section">
-          <button onClick={handleFavoritesPage} className="favorites-button">
+          <button onClick={() => router.push('/favorites')} className="favorites-button">
             ❤️ Mijn Favorieten
           </button>
           <p className="section-description">Bekijk en beheer je favoriete films</p>
@@ -187,7 +312,7 @@ export default function SearchPage() {
 
         <div className="personal-recommendations-section">
           <button
-            onClick={handlePersonalRecommendations}
+            onClick={() => router.push('/personal')}
             className="personal-recommendations-button"
           >
             ✨ Persoonlijke Aanbevelingen
@@ -204,13 +329,40 @@ export default function SearchPage() {
         </div>
       )}
 
-      {searchPerformed && !loading && !error && (
+      {explorePerformed && !loading && !error && (
         <div className="results-summary">
           <p>
             {results.length === 0
-              ? `Geen films gevonden voor "${query}"`
-              : `${results.length} film${results.length !== 1 ? 's' : ''} gevonden voor "${query}"`}
+              ? 'Geen films gevonden met deze instellingen'
+              : `${results.length} film${results.length !== 1 ? 's' : ''} gevonden`}
           </p>
+
+          {Object.values(lastConceptWeights).some((w) => w !== 0) && (
+            <div className="concept-weights-applied">
+              <h4>🎛️ Actieve Concept Filters:</h4>
+              <div className="applied-weights">
+                {Object.entries(lastConceptWeights)
+                  .filter(([_, weight]) => weight !== 0)
+                  .map(([concept, weight]) => {
+                    const slider = sliders.find((s) => s.id === concept)
+                    if (!slider) return null
+
+                    const percentage = (weight * 100).toFixed(0)
+                    const isPositive = weight > 0
+
+                    return (
+                      <span
+                        key={concept}
+                        className={`weight-tag ${isPositive ? 'positive' : 'negative'}`}
+                      >
+                        {slider.icon} {slider.label}: {isPositive ? '+' : ''}
+                        {percentage}%
+                      </span>
+                    )
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -232,7 +384,7 @@ export default function SearchPage() {
           box-sizing: border-box;
         }
 
-        .search-container {
+        .explore-container {
           min-height: 100vh;
           background-color: #ffffff;
           color: #333333;
@@ -241,56 +393,27 @@ export default function SearchPage() {
           padding: 2rem;
         }
 
-        .search-header {
+        .explore-header {
           text-align: center;
           margin-bottom: 2rem;
         }
 
-        .search-header h1 {
+        .explore-header h1 {
           font-size: 2.5rem;
           color: #222222;
           margin-bottom: 0.5rem;
         }
 
-        .search-header p {
+        .explore-header p {
           font-size: 1.1rem;
           color: #555555;
-        }
-
-        .search-form {
-          margin-bottom: 2rem;
-        }
-
-        .advanced-search-section {
-          margin-bottom: 2rem;
-          text-align: center;
-        }
-
-        .advanced-toggle {
-          padding: 1rem 2rem;
-          font-size: 1.1rem;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background-color 0.2s;
-          white-space: nowrap;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin: 0 auto;
-        }
-
-        .advanced-toggle:hover {
-          background-color: #0056b3;
         }
 
         .concept-sliders-container {
           background-color: #f8f9fa;
           padding: 2rem;
           border-radius: 12px;
-          margin-top: 1rem;
+          margin-bottom: 2rem;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
@@ -307,6 +430,7 @@ export default function SearchPage() {
         .sliders-header p {
           font-size: 1rem;
           color: #666666;
+          margin-bottom: 1rem;
         }
 
         .real-time-loading {
@@ -325,20 +449,41 @@ export default function SearchPage() {
           }
         }
 
-        .reset-button {
-          padding: 0.5rem 1rem;
+        .slider-controls {
+          display: flex;
+          gap: 1rem;
+          margin-top: 1rem;
+        }
+
+        .reset-button,
+        .random-button {
+          padding: 0.75rem 1.5rem;
           font-size: 1rem;
-          background-color: #dc3545;
-          color: white;
           border: none;
           border-radius: 8px;
           cursor: pointer;
-          transition: background-color 0.2s;
-          margin-top: 1rem;
+          transition: all 0.2s;
+          font-weight: 600;
+        }
+
+        .reset-button {
+          background-color: #dc3545;
+          color: white;
         }
 
         .reset-button:hover {
           background-color: #c82333;
+          transform: translateY(-1px);
+        }
+
+        .random-button {
+          background-color: #28a745;
+          color: white;
+        }
+
+        .random-button:hover {
+          background-color: #218838;
+          transform: translateY(-1px);
         }
 
         .sliders-grid {
@@ -401,14 +546,36 @@ export default function SearchPage() {
           width: 100%;
           height: 6px;
           border-radius: 3px;
-          background: #007bff;
+          background: linear-gradient(to right, #dc3545 0%, #007bff 50%, #28a745 100%);
           outline: none;
-          opacity: 0.7;
+          opacity: 0.8;
           transition: opacity 0.2s;
         }
 
         .concept-slider:hover {
           opacity: 1;
+        }
+
+        .concept-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #007bff;
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .concept-slider::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #007bff;
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .slider-markers {
@@ -442,7 +609,7 @@ export default function SearchPage() {
           margin-bottom: 2rem;
         }
 
-        .explore-section,
+        .search-section,
         .favorites-section,
         .personal-recommendations-section {
           text-align: center;
@@ -451,8 +618,8 @@ export default function SearchPage() {
           color: white;
         }
 
-        .explore-section {
-          background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        .search-section {
+          background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
         }
 
         .favorites-section {
@@ -463,7 +630,7 @@ export default function SearchPage() {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
-        .explore-button,
+        .search-button,
         .favorites-button,
         .personal-recommendations-button {
           padding: 1rem 2rem;
@@ -477,8 +644,8 @@ export default function SearchPage() {
           margin-bottom: 0.5rem;
         }
 
-        .explore-button {
-          color: #28a745;
+        .search-button {
+          color: #007bff;
         }
 
         .favorites-button {
@@ -489,7 +656,7 @@ export default function SearchPage() {
           color: #667eea;
         }
 
-        .explore-button:hover,
+        .search-button:hover,
         .favorites-button:hover,
         .personal-recommendations-button:hover {
           background-color: white;
@@ -501,55 +668,6 @@ export default function SearchPage() {
           color: rgba(255, 255, 255, 0.9);
           font-size: 1rem;
           margin: 0;
-        }
-
-        .search-input-group {
-          display: flex;
-          gap: 1rem;
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .search-input {
-          flex: 1;
-          padding: 1rem;
-          font-size: 1rem;
-          border: 2px solid #ddd;
-          border-radius: 8px;
-          outline: none;
-          transition: border-color 0.2s;
-          background-color: #ffffff;
-          color: #333333;
-        }
-
-        .search-input:focus {
-          border-color: #007bff;
-        }
-
-        .search-input:disabled {
-          background-color: #f5f5f5;
-          cursor: not-allowed;
-        }
-
-        .search-button {
-          padding: 1rem 2rem;
-          font-size: 1rem;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background-color 0.2s;
-          white-space: nowrap;
-        }
-
-        .search-button:hover:not(:disabled) {
-          background-color: #0056b3;
-        }
-
-        .search-button:disabled {
-          background-color: #ccc;
-          cursor: not-allowed;
         }
 
         .error-message {
@@ -615,19 +733,12 @@ export default function SearchPage() {
           color: white;
         }
 
-        .concept-warning {
-          margin: 0.5rem 0 0 0;
-          font-size: 0.85rem;
-          color: #ff9800;
-          font-style: italic;
-        }
-
         @media (max-width: 768px) {
-          .search-container {
+          .explore-container {
             padding: 1rem;
           }
 
-          .search-header h1 {
+          .explore-header h1 {
             font-size: 2rem;
           }
 
@@ -636,8 +747,12 @@ export default function SearchPage() {
             gap: 1rem;
           }
 
-          .search-input-group {
+          .slider-controls {
             flex-direction: column;
+          }
+
+          .sliders-grid {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
