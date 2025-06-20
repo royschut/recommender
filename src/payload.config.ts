@@ -13,6 +13,7 @@ import { Movies } from './collections/Movies'
 import { Favorites } from './collections/Favorites'
 import importsHandler from './app/handlers/importsHandler'
 import embeddingsHandler from './app/handlers/embeddingsHandler'
+import conceptVectorsHandler from './app/handlers/conceptVectorsHandler'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -34,6 +35,11 @@ export default buildConfig({
       path: '/embeddings',
       method: 'get',
       handler: embeddingsHandler,
+    },
+    {
+      path: '/concept-vectors',
+      method: 'get',
+      handler: conceptVectorsHandler,
     },
   ],
   collections: [Users, Media, Movies, Favorites],
