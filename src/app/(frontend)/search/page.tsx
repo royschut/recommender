@@ -1,8 +1,25 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { MovieCard, CardGrid, type Movie } from '@/components/MovieCard'
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
 
 interface SearchResponse {
   success: boolean
@@ -81,6 +98,64 @@ export default function SearchPage() {
   }>({})
   const router = useRouter()
 
+  // Debounce slider changes for real-time search
+  const debouncedSliders = useDebounce(sliders, 300)
+
+  // Perform search when sliders change (if there's a query and advanced search is active)
+  useEffect(() => {
+    if (query.trim() && showAdvanced) {
+      performSearch()
+    }
+  }, [debouncedSliders])
+
+  const performSearch = useCallback(async () => {
+    if (!query.trim()) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Prepare concept weights for the API
+      const conceptWeights = sliders.reduce(
+        (acc, slider) => {
+          acc[slider.id] = slider.value
+          return acc
+        },
+        {} as Record<string, number>,
+      )
+
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: query.trim(),
+          conceptWeights,
+          limit: 10, // Limit to 10 results
+        }),
+      })
+
+      const data: SearchResponse = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Er is een fout opgetreden bij het zoeken')
+      }
+
+      setResults(data.results || [])
+      setLastSearchInfo({
+        conceptWeights: data.conceptWeights,
+        conceptsEnabled: data.conceptsEnabled,
+      })
+      setSearchPerformed(true)
+    } catch (err) {
+      console.error('Search error:', err)
+      setError(err instanceof Error ? err.message : 'Er is een onbekende fout opgetreden')
+    } finally {
+      setLoading(false)
+    }
+  }, [query, sliders])
+
   const handleMovieClick = (movieId: string) => {
     router.push(`/movie/${movieId}`)
   }
@@ -101,6 +176,7 @@ export default function SearchPage() {
     setSliders((prev) =>
       prev.map((slider) => (slider.id === sliderId ? { ...slider, value } : slider)),
     )
+    // Real-time search will be triggered by useEffect watching debouncedSliders
   }
 
   const resetSliders = () => {
@@ -115,48 +191,7 @@ export default function SearchPage() {
       return
     }
 
-    setLoading(true)
-    setError(null)
-    setSearchPerformed(true)
-
-    try {
-      // Prepare concept weights for the API
-      const conceptWeights = sliders.reduce(
-        (acc, slider) => {
-          acc[slider.id] = slider.value
-          return acc
-        },
-        {} as Record<string, number>,
-      )
-
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: query.trim(),
-          conceptWeights,
-        }),
-      })
-
-      const data: SearchResponse = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Er is een fout opgetreden bij het zoeken')
-      }
-
-      setResults(data.results || [])
-      setLastSearchInfo({
-        conceptWeights: data.conceptWeights,
-        conceptsEnabled: data.conceptsEnabled,
-      })
-    } catch (err: any) {
-      setError(err.message || 'Er is een onbekende fout opgetreden')
-      setResults([])
-    } finally {
-      setLoading(false)
-    }
+    await performSearch()
   }
 
   return (
@@ -198,6 +233,9 @@ export default function SearchPage() {
               <h3>🎛️ Film Dimensies</h3>
               <p>
                 Balanceer tussen verschillende film eigenschappen om je zoekresultaten te verfijnen
+                {loading && query.trim() && showAdvanced && (
+                  <span className="real-time-loading"> • 🔄 Zoeken...</span>
+                )}
               </p>
               <button onClick={resetSliders} className="reset-button" type="button">
                 Reset alle sliders
@@ -421,6 +459,17 @@ export default function SearchPage() {
           color: #666666;
         }
 
+        .real-time-loading {
+          color: #007bff;
+          font-weight: 600;
+          animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
         .reset-button {
           padding: 0.5rem 1rem;
           font-size: 1rem;
@@ -439,58 +488,64 @@ export default function SearchPage() {
 
         .sliders-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-          gap: 1.5rem;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1rem;
         }
 
         .slider-container {
           background-color: #ffffff;
-          padding: 1.5rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          padding: 1rem;
+          border-radius: 8px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+          border: 1px solid #e9ecef;
         }
 
         .slider-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 1rem;
+          margin-bottom: 0.75rem;
         }
 
         .slider-icon {
-          font-size: 1.5rem;
-          margin-right: 0.5rem;
+          font-size: 1.2rem;
+          margin-right: 0.25rem;
         }
 
         .slider-title {
-          font-size: 1.2rem;
+          font-size: 0.95rem;
           color: #333333;
           margin: 0;
+          flex: 1;
         }
 
         .slider-value {
-          font-size: 1rem;
+          font-size: 0.85rem;
           color: #007bff;
-          font-weight: 500;
+          font-weight: 600;
         }
 
         .slider-labels {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 1rem;
+          margin-bottom: 0.75rem;
         }
 
         .left-label,
         .right-label {
-          font-size: 0.9rem;
+          font-size: 0.75rem;
           color: #666666;
+          flex: 0 0 auto;
+          text-align: center;
+          max-width: 45%;
+          line-height: 1.2;
         }
 
         .concept-slider {
           -webkit-appearance: none;
           width: 100%;
-          height: 8px;
-          border-radius: 4px;
+          height: 6px;
+          border-radius: 3px;
           background: #007bff;
           outline: none;
           opacity: 0.7;
@@ -504,16 +559,16 @@ export default function SearchPage() {
         .slider-markers {
           display: flex;
           justify-content: space-between;
-          margin-top: 0.5rem;
+          margin-top: 0.25rem;
         }
 
         .marker {
-          font-size: 1.2rem;
+          font-size: 1rem;
           color: #007bff;
         }
 
         .marker.center {
-          transform: translateY(-2px);
+          transform: translateY(-1px);
         }
 
         .concept-explanation {
