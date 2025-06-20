@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { QdrantClient } from '@qdrant/js-client-rest'
+import { getPayload } from 'payload'
+import config from '@/payload.config'
 
 const qdrant = new QdrantClient({
   url: process.env.QDRANT_URL,
@@ -97,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Concept weights from request:', conceptWeights)
 
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || '12')
 
     console.log('🎛️ Explore GET request:', { conceptWeights, limit })
 
@@ -107,43 +109,50 @@ export async function GET(request: NextRequest) {
     const hasActiveWeights = Object.values(conceptWeights).some((weight) => weight !== 0)
 
     if (!hasActiveWeights) {
-      // No concept weights active - return random popular film
-
+      // No concept weights active - return random popular films
       console.log('🎲 No active concept weights, returning random popular films...')
-      console.log('TEST')
 
       const randomResults = await qdrant.scroll(collectionName, {
-        limit: 10, //limit * 3, // Get more to filter out low-rated ones
-        // with_payload: true,
-        // with_vector: false,
+        limit: limit * 2, // Get more to have variety
+        with_payload: true,
+        with_vector: false,
       })
 
-      // Filter for movies with decent ratings and shuffle
-      const decentMovies = randomResults.points
-        .filter((point: any) => {
-          const rating = point.payload?.vote_average
-          return rating && rating >= 6.0 // Only show movies with rating >= 6.0
-        })
+      // Get movie IDs from Qdrant results and shuffle them
+      const movieIds = randomResults.points
+        .map((point: any) => point.payload?.movieId)
+        .filter(Boolean)
         .sort(() => Math.random() - 0.5) // Shuffle randomly
         .slice(0, limit)
 
-      const movies = decentMovies.map((point: any) => ({
-        id: point.id.toString(),
-        title: point.payload?.title || 'Unknown Title',
-        overview: point.payload?.overview || '',
-        poster_path: point.payload?.poster_path || null,
-        backdrop_path: point.payload?.backdrop_path || null,
-        release_date: point.payload?.release_date || '',
-        vote_average: point.payload?.vote_average || 0,
-        vote_count: point.payload?.vote_count || 0,
-        genre_ids: point.payload?.genre_ids || [],
-        popularity: point.payload?.popularity || 0,
-      }))
+      if (movieIds.length === 0) {
+        return NextResponse.json({
+          success: true,
+          results: [],
+          totalFound: 0,
+          method: 'random_popular',
+          conceptWeights,
+        })
+      }
+
+      // Fetch full movie details from Payload (just like search API does)
+      const payloadConfig = await config
+      const payload = await getPayload({ config: payloadConfig })
+
+      const movies = await payload.find({
+        collection: 'movies',
+        where: {
+          id: {
+            in: movieIds,
+          },
+        },
+        limit: movieIds.length,
+      })
 
       return NextResponse.json({
         success: true,
-        results: movies,
-        totalFound: movies.length,
+        results: movies.docs,
+        totalFound: movies.docs.length,
         method: 'random_popular',
         conceptWeights,
       })
@@ -176,26 +185,51 @@ export async function GET(request: NextRequest) {
       with_vector: false,
     })
 
-    const movies = searchResults.map((result: any) => ({
-      id: result.id.toString(),
-      title: result.payload?.title || 'Unknown Title',
-      overview: result.payload?.overview || '',
-      poster_path: result.payload?.poster_path || null,
-      backdrop_path: result.payload?.backdrop_path || null,
-      release_date: result.payload?.release_date || '',
-      vote_average: result.payload?.vote_average || 0,
-      vote_count: result.payload?.vote_count || 0,
-      genre_ids: result.payload?.genre_ids || [],
-      popularity: result.payload?.popularity || 0,
-      score: result.score,
-    }))
+    // Get movie IDs from search results
+    const movieIds = searchResults.map((result) => result.payload?.movieId).filter(Boolean)
 
-    console.log(`✅ Found ${movies.length} films using concept-based search`)
+    if (movieIds.length === 0) {
+      return NextResponse.json({
+        success: true,
+        results: [],
+        totalFound: 0,
+        method: 'concept_based_search',
+        conceptWeights,
+      })
+    }
+
+    // Fetch full movie details from Payload (just like search API does)
+    const payloadConfig = await config
+    const payload = await getPayload({ config: payloadConfig })
+
+    const movies = await payload.find({
+      collection: 'movies',
+      where: {
+        id: {
+          in: movieIds,
+        },
+      },
+      limit: movieIds.length,
+    })
+
+    // Sort movies by their similarity score (maintaining order from Qdrant)
+    const sortedMovies = movieIds
+      .map((movieId) => {
+        const movie = movies.docs.find((m) => String(m.id) === movieId)
+        const searchResult = searchResults.find((r) => r.payload?.movieId === movieId)
+        return {
+          ...movie,
+          similarityScore: searchResult?.score || 0,
+        }
+      })
+      .filter(Boolean)
+
+    console.log(`✅ Found ${sortedMovies.length} films using concept-based search`)
 
     return NextResponse.json({
       success: true,
-      results: movies,
-      totalFound: movies.length,
+      results: sortedMovies,
+      totalFound: sortedMovies.length,
       method: 'concept_based_search',
       conceptWeights,
       appliedConcepts: Object.entries(conceptWeights)
