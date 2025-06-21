@@ -26,6 +26,12 @@ interface ExploreResponse {
   results: Movie[]
   totalFound: number
   conceptWeights?: Record<string, number>
+  filters?: {
+    yearMin: number
+    yearMax: number
+    scoreMin: number
+    scoreMax: number
+  }
   error?: string
   details?: string
 }
@@ -37,6 +43,17 @@ interface ConceptSlider {
   rightLabel: string
   value: number // -1 to 1, where 0 is neutral
   icon: string
+}
+
+interface FilterSlider {
+  id: string
+  label: string
+  min: number
+  max: number
+  value: [number, number] // [min, max] range
+  step: number
+  icon: string
+  formatValue: (value: number) => string
 }
 
 const conceptSliders: ConceptSlider[] = [
@@ -82,34 +99,63 @@ const conceptSliders: ConceptSlider[] = [
   },
 ]
 
+const filterSliders: FilterSlider[] = [
+  {
+    id: 'year',
+    label: 'Jaartal',
+    min: 1900,
+    max: 2025,
+    value: [1900, 2025],
+    step: 1,
+    icon: '📅',
+    formatValue: (value) => value.toString(),
+  },
+  {
+    id: 'score',
+    label: 'Score',
+    min: 0,
+    max: 10,
+    value: [0, 10],
+    step: 0.1,
+    icon: '⭐',
+    formatValue: (value) => value.toFixed(1),
+  },
+]
+
 export default function ExplorePage() {
   const [results, setResults] = useState<Movie[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sliders, setSliders] = useState<ConceptSlider[]>(conceptSliders)
+  const [filters, setFilters] = useState<FilterSlider[]>(filterSliders)
   const [explorePerformed, setExplorePerformed] = useState(false)
   const [lastConceptWeights, setLastConceptWeights] = useState<Record<string, number>>({})
   const router = useRouter()
 
   // Debounce slider changes for real-time exploration
   const debouncedSliders = useDebounce(sliders, 500)
+  const debouncedFilters = useDebounce(filters, 500)
 
   // Load initial random films on page load
   useEffect(() => {
     loadInitialFilms()
   }, [])
 
-  // Perform explore when sliders change (if any slider is not neutral)
+  // Perform explore when sliders or filters change
   useEffect(() => {
     const hasNonNeutralSlider = sliders.some((slider) => slider.value !== 0)
-    if (hasNonNeutralSlider) {
+    const hasActiveFilters = filters.some(
+      (filter) => filter.value[0] !== filter.min || filter.value[1] !== filter.max,
+    )
+
+    if (hasNonNeutralSlider || hasActiveFilters) {
       performExplore()
     } else if (explorePerformed) {
-      // Load initial films again when all sliders are reset
+      // Load initial films again when all sliders and filters are reset
       loadInitialFilms()
       setExplorePerformed(false)
     }
-  }, [debouncedSliders])
+  }, [debouncedSliders, debouncedFilters])
 
   const loadInitialFilms = useCallback(async () => {
     setLoading(true)
@@ -159,6 +205,34 @@ export default function ExplorePage() {
         }
       })
 
+      // Add filter parameters
+      const yearFilter = filters.find((f) => f.id === 'year')
+      const scoreFilter = filters.find((f) => f.id === 'score')
+
+      if (
+        yearFilter &&
+        (yearFilter.value[0] !== yearFilter.min || yearFilter.value[1] !== yearFilter.max)
+      ) {
+        if (yearFilter.value[0] > yearFilter.min) {
+          searchParams.set('yearMin', yearFilter.value[0].toString())
+        }
+        if (yearFilter.value[1] < yearFilter.max) {
+          searchParams.set('yearMax', yearFilter.value[1].toString())
+        }
+      }
+
+      if (
+        scoreFilter &&
+        (scoreFilter.value[0] !== scoreFilter.min || scoreFilter.value[1] !== scoreFilter.max)
+      ) {
+        if (scoreFilter.value[0] > scoreFilter.min) {
+          searchParams.set('scoreMin', scoreFilter.value[0].toString())
+        }
+        if (scoreFilter.value[1] < scoreFilter.max) {
+          searchParams.set('scoreMax', scoreFilter.value[1].toString())
+        }
+      }
+
       const response = await fetch(`/api/explore?${searchParams.toString()}`)
 
       const data: ExploreResponse = await response.json()
@@ -176,7 +250,7 @@ export default function ExplorePage() {
     } finally {
       setLoading(false)
     }
-  }, [sliders])
+  }, [sliders, filters])
 
   const handleMovieClick = (movieId: string) => {
     router.push(`/movie/${movieId}`)
@@ -192,8 +266,15 @@ export default function ExplorePage() {
     )
   }
 
+  const handleFilterChange = (filterId: string, value: [number, number]) => {
+    setFilters((prev) =>
+      prev.map((filter) => (filter.id === filterId ? { ...filter, value } : filter)),
+    )
+  }
+
   const resetSliders = () => {
     setSliders((prev) => prev.map((slider) => ({ ...slider, value: 0 })))
+    setFilters((prev) => prev.map((filter) => ({ ...filter, value: [filter.min, filter.max] })))
   }
 
   const getRandomFilms = async () => {
@@ -228,9 +309,9 @@ export default function ExplorePage() {
         <div className="sliders-header">
           <h3>🎭 Explore</h3>
           <div className="slider-controls">
-            {/* <button onClick={resetSliders} className="reset-button" type="button">
-              🔄 Reset Sliders
-            </button> */}
+            <button onClick={resetSliders} className="reset-button" type="button">
+              🔄 Reset Alle Filters
+            </button>
             {/* <button onClick={getRandomFilms} className="random-button" type="button">
               🎲 Willekeurige Films
             </button> */}
@@ -274,6 +355,70 @@ export default function ExplorePage() {
               />
             </div>
           ))}
+        </div>
+
+        {/* Filter Sliders */}
+        <div className="filters-section">
+          <h4>🔍 Filters</h4>
+          <div className="filters-grid">
+            {filters.map((filter) => (
+              <div key={filter.id} className="filter-container">
+                <div className="slider-header">
+                  <span className="slider-icon">{filter.icon}</span>
+                  <h4 className="slider-title">{filter.label}</h4>
+                </div>
+                <span className="slider-value">
+                  {filter.value[0] === filter.min && filter.value[1] === filter.max
+                    ? 'Alle'
+                    : `${filter.formatValue(filter.value[0])} - ${filter.formatValue(filter.value[1])}`}
+                </span>
+
+                <div className="dual-range-container">
+                  <div className="range-track">
+                    <div
+                      className="range-progress"
+                      style={{
+                        left: `${((filter.value[0] - filter.min) / (filter.max - filter.min)) * 100}%`,
+                        width: `${((filter.value[1] - filter.value[0]) / (filter.max - filter.min)) * 100}%`,
+                      }}
+                    ></div>
+                  </div>
+
+                  <input
+                    type="range"
+                    min={filter.min}
+                    max={filter.max}
+                    step={filter.step}
+                    value={filter.value[0]}
+                    onChange={(e) => {
+                      const newMin = parseFloat(e.target.value)
+                      if (newMin <= filter.value[1]) {
+                        handleFilterChange(filter.id, [newMin, filter.value[1]])
+                      }
+                    }}
+                    disabled={loading}
+                    className="dual-range-slider slider-min"
+                  />
+
+                  <input
+                    type="range"
+                    min={filter.min}
+                    max={filter.max}
+                    step={filter.step}
+                    value={filter.value[1]}
+                    onChange={(e) => {
+                      const newMax = parseFloat(e.target.value)
+                      if (newMax >= filter.value[0]) {
+                        handleFilterChange(filter.id, [filter.value[0], newMax])
+                      }
+                    }}
+                    disabled={loading}
+                    className="dual-range-slider slider-max"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -585,6 +730,108 @@ export default function ExplorePage() {
           border-radius: 8px;
         }
 
+        .filters-section {
+          margin-top: 2rem;
+          padding-top: 1.5rem;
+          border-top: 2px solid #e9ecef;
+        }
+
+        .filters-section h4 {
+          margin-bottom: 1rem;
+          color: #333333;
+          font-size: 1.1rem;
+          font-weight: 600;
+        }
+
+        .filters-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+
+        .filter-container {
+          background-color: #ffffff;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          padding: 1rem;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          transition: all 0.2s;
+        }
+
+        .filter-container:hover {
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          transform: translateY(-1px);
+        }
+
+        .dual-range-container {
+          position: relative;
+          margin-top: 1rem;
+          height: 6px;
+        }
+
+        .range-track {
+          position: absolute;
+          width: 100%;
+          height: 6px;
+          background-color: #ddd;
+          border-radius: 3px;
+          top: 0;
+        }
+
+        .range-progress {
+          position: absolute;
+          height: 6px;
+          background-color: #007bff;
+          border-radius: 3px;
+          top: 0;
+        }
+
+        .dual-range-slider {
+          position: absolute;
+          -webkit-appearance: none;
+          width: 100%;
+          height: 6px;
+          border-radius: 3px;
+          background: transparent;
+          outline: none;
+          top: 0;
+          pointer-events: none;
+        }
+
+        .dual-range-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #007bff;
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          pointer-events: auto;
+          position: relative;
+          z-index: 2;
+        }
+
+        .dual-range-slider::-moz-range-thumb {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background: #007bff;
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          pointer-events: auto;
+        }
+
+        .dual-range-slider.slider-max::-webkit-slider-thumb {
+          background: #28a745;
+        }
+
+        .dual-range-slider.slider-max::-moz-range-thumb {
+          background: #28a745;
+        }
+
         .action-sections {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
@@ -737,6 +984,11 @@ export default function ExplorePage() {
 
           .sliders-grid {
             grid-template-columns: 1fr;
+          }
+
+          .filters-grid {
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
           }
         }
       `}</style>

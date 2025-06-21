@@ -97,11 +97,25 @@ export async function GET(request: NextRequest) {
       realism: parseFloat(searchParams.get('realism') || '0'),
     }
 
+    // Parse filter parameters
+    const yearMin = parseInt(searchParams.get('yearMin') || '0')
+    const yearMax = parseInt(searchParams.get('yearMax') || '0')
+    const scoreMin = parseFloat(searchParams.get('scoreMin') || '0')
+    const scoreMax = parseFloat(searchParams.get('scoreMax') || '0')
+
     console.log('🔍 Concept weights from request:', conceptWeights)
+    console.log('🔍 Filters from request:', { yearMin, yearMax, scoreMin, scoreMax })
 
     const limit = parseInt(searchParams.get('limit') || '12')
 
-    console.log('🎛️ Explore GET request:', { conceptWeights, limit })
+    console.log('🎛️ Explore GET request:', {
+      conceptWeights,
+      yearMin,
+      yearMax,
+      scoreMin,
+      scoreMax,
+      limit,
+    })
 
     const collectionName = 'movie-embeddings'
 
@@ -109,36 +123,107 @@ export async function GET(request: NextRequest) {
     const hasActiveWeights = Object.values(conceptWeights).some((weight) => weight !== 0)
 
     if (!hasActiveWeights) {
-      // No concept weights active - return random popular films
-      console.log('🎲 No active concept weights, returning random popular films...')
+      // No concept weights active - return filtered random popular films
+      console.log('🎲 No active concept weights, applying filters and returning random popular films...')
 
-      const randomResults = await qdrant.scroll(collectionName, {
-        limit: limit * 2, // Get more to have variety
-        with_payload: true,
-        with_vector: false,
+      // First, get filtered movie IDs from Payload based on filters
+      const payloadConfig = await config
+      const payload = await getPayload({ config: payloadConfig })
+
+      // Build Payload filters for pre-filtering
+      const whereConditions: any = {
+        hasEmbedding: {
+          equals: true, // Only get movies that have embeddings in Qdrant
+        },
+      }
+
+      // Add year filter if specified
+      if (yearMin > 0 || yearMax > 0) {
+        whereConditions.releaseDate = {}
+        if (yearMin > 0) {
+          whereConditions.releaseDate.greater_than_equal = `${yearMin}-01-01`
+        }
+        if (yearMax > 0) {
+          whereConditions.releaseDate.less_than_equal = `${yearMax}-12-31`
+        }
+      }
+
+      // Add score filter if specified
+      if (scoreMin > 0 || scoreMax > 0) {
+        whereConditions.voteAverage = {}
+        if (scoreMin > 0) {
+          whereConditions.voteAverage.greater_than_equal = scoreMin
+        }
+        if (scoreMax > 0) {
+          whereConditions.voteAverage.less_than_equal = scoreMax
+        }
+      }
+
+      // Get filtered movies from Payload
+      const filteredMovies = await payload.find({
+        collection: 'movies',
+        where: whereConditions,
+        limit: 0, // Get all matching movies
+        select: {
+          id: true,
+          qdrantId: true,
+        },
       })
 
-      // Get movie IDs from Qdrant results and shuffle them
-      const movieIds = randomResults.points
+      if (filteredMovies.docs.length === 0) {
+        return NextResponse.json({
+          success: true,
+          results: [],
+          totalFound: 0,
+          method: 'filtered_random',
+          conceptWeights,
+          filters: { yearMin, yearMax, scoreMin, scoreMax },
+        })
+      }
+
+      // Get Qdrant IDs from filtered movies
+      const qdrantIds = filteredMovies.docs
+        .filter((movie: any) => movie.qdrantId)
+        .map((movie: any) => parseInt(movie.qdrantId))
+
+      if (qdrantIds.length === 0) {
+        return NextResponse.json({
+          success: true,
+          results: [],
+          totalFound: 0,
+          method: 'filtered_random',
+          conceptWeights,
+          filters: { yearMin, yearMax, scoreMin, scoreMax },
+        })
+      }
+
+      // Randomly shuffle and limit the Qdrant IDs
+      const shuffledIds = qdrantIds
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.min(limit, qdrantIds.length))
+
+      // Get the full details from Qdrant to get movieIds  
+      const qdrantResults = await qdrant.retrieve(collectionName, {
+        ids: shuffledIds,
+        with_payload: true,
+      })
+
+      const movieIds = qdrantResults
         .map((point: any) => point.payload?.movieId)
         .filter(Boolean)
-        .sort(() => Math.random() - 0.5) // Shuffle randomly
-        .slice(0, limit)
 
       if (movieIds.length === 0) {
         return NextResponse.json({
           success: true,
           results: [],
           totalFound: 0,
-          method: 'random_popular',
+          method: 'filtered_random',
           conceptWeights,
+          filters: { yearMin, yearMax, scoreMin, scoreMax },
         })
       }
 
-      // Fetch full movie details from Payload (just like search API does)
-      const payloadConfig = await config
-      const payload = await getPayload({ config: payloadConfig })
-
+      // Fetch full movie details from Payload
       const movies = await payload.find({
         collection: 'movies',
         where: {
@@ -153,8 +238,10 @@ export async function GET(request: NextRequest) {
         success: true,
         results: movies.docs,
         totalFound: movies.docs.length,
-        method: 'random_popular',
+        totalAvailable: filteredMovies.docs.length,
+        method: 'filtered_random',
         conceptWeights,
+        filters: { yearMin, yearMax, scoreMin, scoreMax },
       })
     }
 
@@ -177,16 +264,86 @@ export async function GET(request: NextRequest) {
 
     console.log('🎯 Searching with concept-based target vector...')
 
-    // Use regular search with the target vector
+    // Build pre-filter conditions for Payload if filters are specified
+    let preFilteredMovieIds: string[] | null = null
+    
+    if (yearMin > 0 || yearMax > 0 || scoreMin > 0 || scoreMax > 0) {
+      console.log('🔍 Pre-filtering movies based on year/score filters...')
+      
+      const payloadConfig = await config
+      const payload = await getPayload({ config: payloadConfig })
+      
+      const whereConditions: any = {
+        hasEmbedding: {
+          equals: true,
+        },
+      }
+
+      // Add year filter if specified
+      if (yearMin > 0 || yearMax > 0) {
+        whereConditions.releaseDate = {}
+        if (yearMin > 0) {
+          whereConditions.releaseDate.greater_than_equal = `${yearMin}-01-01`
+        }
+        if (yearMax > 0) {
+          whereConditions.releaseDate.less_than_equal = `${yearMax}-12-31`
+        }
+      }
+
+      // Add score filter if specified
+      if (scoreMin > 0 || scoreMax > 0) {
+        whereConditions.voteAverage = {}
+        if (scoreMin > 0) {
+          whereConditions.voteAverage.greater_than_equal = scoreMin
+        }
+        if (scoreMax > 0) {
+          whereConditions.voteAverage.less_than_equal = scoreMax
+        }
+      }
+
+      const filteredMovies = await payload.find({
+        collection: 'movies',
+        where: whereConditions,
+        limit: 0,
+      })
+
+      preFilteredMovieIds = filteredMovies.docs.map((movie: any) => String(movie.id))
+      
+      if (preFilteredMovieIds.length === 0) {
+        return NextResponse.json({
+          success: true,
+          results: [],
+          totalFound: 0,
+          method: 'concept_based_search_filtered',
+          conceptWeights,
+          filters: { yearMin, yearMax, scoreMin, scoreMax },
+        })
+      }
+      
+      console.log(`🔍 Pre-filter reduced search space to ${preFilteredMovieIds.length} movies`)
+    }
+
+    // Use regular search with the target vector, but get more results if we're filtering
+    const searchLimit = preFilteredMovieIds ? Math.min(limit * 3, 50) : limit
+    
     const searchResults = await qdrant.search(collectionName, {
       vector: targetVector,
-      limit,
+      limit: searchLimit,
       with_payload: true,
       with_vector: false,
     })
 
     // Get movie IDs from search results
-    const movieIds = searchResults.map((result) => result.payload?.movieId).filter(Boolean)
+    let movieIds = searchResults.map((result) => result.payload?.movieId).filter(Boolean)
+    
+    // Apply pre-filter if we have one
+    if (preFilteredMovieIds) {
+      movieIds = movieIds.filter((movieId) => preFilteredMovieIds!.includes(String(movieId)))
+      console.log(`🔍 Post-filter reduced results to ${movieIds.length} movies`)
+    }
+    
+    // Limit to final desired count
+    movieIds = movieIds.slice(0, limit)
 
     if (movieIds.length === 0) {
       return NextResponse.json({
@@ -195,6 +352,7 @@ export async function GET(request: NextRequest) {
         totalFound: 0,
         method: 'concept_based_search',
         conceptWeights,
+        filters: { yearMin, yearMax, scoreMin, scoreMax },
       })
     }
 
@@ -232,6 +390,7 @@ export async function GET(request: NextRequest) {
       totalFound: sortedMovies.length,
       method: 'concept_based_search',
       conceptWeights,
+      filters: { yearMin, yearMax, scoreMin, scoreMax },
       appliedConcepts: Object.entries(conceptWeights)
         .filter(([_, weight]) => weight !== 0)
         .map(([concept, weight]) => ({ concept, weight })),
