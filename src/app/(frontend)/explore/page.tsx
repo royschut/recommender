@@ -133,12 +133,13 @@ export default function ExplorePage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [explorePerformed, setExplorePerformed] = useState(false)
   const [lastConceptWeights, setLastConceptWeights] = useState<Record<string, number>>({})
+  const [isDragging, setIsDragging] = useState(false)
   const router = useRouter()
 
-  // Debounce slider changes for real-time exploration
-  const debouncedSliders = useDebounce(sliders, 500)
-  const debouncedFilters = useDebounce(filters, 500)
-  const debouncedGenres = useDebounce(selectedGenres, 500)
+  // Debounce slider changes - longer delay to wait for user to finish adjusting
+  const debouncedSliders = useDebounce(sliders, 1000)
+  const debouncedFilters = useDebounce(filters, 1000)
+  const debouncedGenres = useDebounce(selectedGenres, 500) // Genres can be shorter since they're clicks
 
   // Load initial random films on page load
   useEffect(() => {
@@ -160,8 +161,10 @@ export default function ExplorePage() {
     }
   }
 
-  // Perform explore when sliders, filters, or genres change
+  // Perform explore when sliders, filters, or genres change (but not while dragging)
   useEffect(() => {
+    if (isDragging) return // Don't perform explore while user is dragging sliders
+
     const hasNonNeutralSlider = sliders.some((slider) => slider.value !== 0)
     const hasActiveFilters = filters.some(
       (filter) => filter.value[0] !== filter.min || filter.value[1] !== filter.max,
@@ -175,7 +178,7 @@ export default function ExplorePage() {
       loadInitialFilms()
       setExplorePerformed(false)
     }
-  }, [debouncedSliders, debouncedFilters, debouncedGenres])
+  }, [debouncedSliders, debouncedFilters, debouncedGenres, isDragging])
 
   const loadInitialFilms = useCallback(async () => {
     setLoading(true)
@@ -382,6 +385,10 @@ export default function ExplorePage() {
                 step="0.1"
                 value={slider.value}
                 onChange={(e) => handleSliderChange(slider.id, parseFloat(e.target.value))}
+                onMouseDown={() => setIsDragging(true)}
+                onMouseUp={() => setIsDragging(false)}
+                onTouchStart={() => setIsDragging(true)}
+                onTouchEnd={() => setIsDragging(false)}
                 className="concept-slider"
                 disabled={loading}
               />
@@ -428,6 +435,10 @@ export default function ExplorePage() {
                         handleFilterChange(filter.id, [newMin, filter.value[1]])
                       }
                     }}
+                    onMouseDown={() => setIsDragging(true)}
+                    onMouseUp={() => setIsDragging(false)}
+                    onTouchStart={() => setIsDragging(true)}
+                    onTouchEnd={() => setIsDragging(false)}
                     disabled={loading}
                     className="dual-range-slider slider-min"
                   />
@@ -444,6 +455,10 @@ export default function ExplorePage() {
                         handleFilterChange(filter.id, [filter.value[0], newMax])
                       }
                     }}
+                    onMouseDown={() => setIsDragging(true)}
+                    onMouseUp={() => setIsDragging(false)}
+                    onTouchStart={() => setIsDragging(true)}
+                    onTouchEnd={() => setIsDragging(false)}
                     disabled={loading}
                     className="dual-range-slider slider-max"
                   />
