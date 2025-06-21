@@ -31,6 +31,7 @@ interface ExploreResponse {
     yearMax: number
     scoreMin: number
     scoreMax: number
+    selectedGenres: string[]
   }
   error?: string
   details?: string
@@ -128,6 +129,8 @@ export default function ExplorePage() {
   const [error, setError] = useState<string | null>(null)
   const [sliders, setSliders] = useState<ConceptSlider[]>(conceptSliders)
   const [filters, setFilters] = useState<FilterSlider[]>(filterSliders)
+  const [availableGenres, setAvailableGenres] = useState<string[]>([])
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([])
   const [explorePerformed, setExplorePerformed] = useState(false)
   const [lastConceptWeights, setLastConceptWeights] = useState<Record<string, number>>({})
   const router = useRouter()
@@ -135,27 +138,44 @@ export default function ExplorePage() {
   // Debounce slider changes for real-time exploration
   const debouncedSliders = useDebounce(sliders, 500)
   const debouncedFilters = useDebounce(filters, 500)
+  const debouncedGenres = useDebounce(selectedGenres, 500)
 
   // Load initial random films on page load
   useEffect(() => {
     loadInitialFilms()
+    loadAvailableGenres()
   }, [])
 
-  // Perform explore when sliders or filters change
+  const loadAvailableGenres = async () => {
+    try {
+      const response = await fetch('/api/genres')
+      const data = await response.json()
+
+      if (data.success) {
+        setAvailableGenres(data.genres || [])
+        console.log(`📊 Loaded ${data.genres?.length || 0} available genres`)
+      }
+    } catch (error) {
+      console.error('Error loading genres:', error)
+    }
+  }
+
+  // Perform explore when sliders, filters, or genres change
   useEffect(() => {
     const hasNonNeutralSlider = sliders.some((slider) => slider.value !== 0)
     const hasActiveFilters = filters.some(
       (filter) => filter.value[0] !== filter.min || filter.value[1] !== filter.max,
     )
+    const hasSelectedGenres = selectedGenres.length > 0
 
-    if (hasNonNeutralSlider || hasActiveFilters) {
+    if (hasNonNeutralSlider || hasActiveFilters || hasSelectedGenres) {
       performExplore()
     } else if (explorePerformed) {
-      // Load initial films again when all sliders and filters are reset
+      // Load initial films again when all sliders, filters, and genres are reset
       loadInitialFilms()
       setExplorePerformed(false)
     }
-  }, [debouncedSliders, debouncedFilters])
+  }, [debouncedSliders, debouncedFilters, debouncedGenres])
 
   const loadInitialFilms = useCallback(async () => {
     setLoading(true)
@@ -233,6 +253,11 @@ export default function ExplorePage() {
         }
       }
 
+      // Add genre filter parameters
+      if (selectedGenres.length > 0) {
+        searchParams.set('genres', selectedGenres.join(','))
+      }
+
       const response = await fetch(`/api/explore?${searchParams.toString()}`)
 
       const data: ExploreResponse = await response.json()
@@ -272,9 +297,16 @@ export default function ExplorePage() {
     )
   }
 
+  const handleGenreToggle = (genre: string) => {
+    setSelectedGenres((prev) =>
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre],
+    )
+  }
+
   const resetSliders = () => {
     setSliders((prev) => prev.map((slider) => ({ ...slider, value: 0 })))
     setFilters((prev) => prev.map((filter) => ({ ...filter, value: [filter.min, filter.max] })))
+    setSelectedGenres([])
   }
 
   const getRandomFilms = async () => {
@@ -419,6 +451,30 @@ export default function ExplorePage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Genre Filter */}
+        <div className="genre-section">
+          <h4>🎬 Genres</h4>
+          <div className="genres-grid">
+            {availableGenres.map((genre) => (
+              <button
+                key={genre}
+                onClick={() => handleGenreToggle(genre)}
+                disabled={loading}
+                className={`genre-button ${selectedGenres.includes(genre) ? 'selected' : ''}`}
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
+          {selectedGenres.length > 0 && (
+            <div className="selected-genres">
+              <span className="selected-count">
+                {selectedGenres.length} genre{selectedGenres.length !== 1 ? 's' : ''} geselecteerd
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -832,6 +888,66 @@ export default function ExplorePage() {
           background: #28a745;
         }
 
+        .genre-section {
+          margin-top: 1.5rem;
+        }
+
+        .genre-section h4 {
+          font-size: 1.2rem;
+          color: #222222;
+          margin-bottom: 1rem;
+          font-weight: 600;
+        }
+
+        .genres-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .genre-button {
+          background-color: #f8f9fa;
+          border: 1px solid #dee2e6;
+          border-radius: 20px;
+          padding: 0.5rem 1rem;
+          font-size: 0.9rem;
+          color: #495057;
+          cursor: pointer;
+          transition: all 0.2s;
+          white-space: nowrap;
+        }
+
+        .genre-button:hover {
+          background-color: #e9ecef;
+          border-color: #adb5bd;
+          transform: translateY(-1px);
+        }
+
+        .genre-button.selected {
+          background-color: #007bff;
+          border-color: #007bff;
+          color: white;
+        }
+
+        .genre-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .selected-genres {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .selected-count {
+          font-size: 0.9rem;
+          color: #007bff;
+          font-weight: 500;
+        }
+
         .action-sections {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
@@ -989,6 +1105,15 @@ export default function ExplorePage() {
           .filters-grid {
             grid-template-columns: 1fr;
             gap: 0.8rem;
+          }
+
+          .genres-grid {
+            gap: 0.3rem;
+          }
+
+          .genre-button {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
           }
         }
       `}</style>
