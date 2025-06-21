@@ -53,7 +53,7 @@ const PlaygroundLayout: React.FC<PlaygroundLayoutProps> = ({ children, activeTab
     <div className="playground-container">
       <header className="playground-header">
         <h1 className="playground-title">{playground.title}</h1>
-        {/* <p className="playground-subtitle">{playground.subtitle}</p> */}
+        <p className="playground-subtitle">{playground.subtitle}</p>
       </header>
 
       <Tabs.Root className="playground-tabs" value={currentTab} onValueChange={handleTabChange}>

@@ -1,16 +1,59 @@
+/* Font and Design Variables */
+:root {
+  --font-geist-sans: var(
+    --font-geist-sans,
+    'Geist',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif
+  );
+  --font-geist-mono: var(
+    --font-geist-mono,
+    'Geist Mono',
+    'SF Mono',
+    Monaco,
+    Inconsolata,
+    'Roboto Mono',
+    monospace
+  );
+
+  /* Enhanced border radius for modern look */
+  --radius-1: 4px;
+  --radius-2: 6px;
+  --radius-3: 10px;
+  --radius-4: 16px;
+  --radius-5: 20px;
+  --radius-6: 24px;
+
+  /* Spacing and typography variables */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  --font-size-2: 0.75rem;
+  --font-size-3: 0.875rem;
+  --font-size-4: 1rem;
+  --font-size-6: 1.5rem;
+  --font-size-7: 2rem;
+  --font-size-8: 2.5rem;
+
+  --shadow-2: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-3: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 /* Playground Layout Styling */
 
 .playground-container {
   min-height: 100vh;
   background-color: var(--color-background);
   padding: var(--space-6, 2rem);
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-geist-sans);
 }
 
 /* Header */
@@ -25,6 +68,7 @@
   color: var(--gray-12);
   margin: 0 0 var(--space-3, 0.75rem) 0;
   letter-spacing: -0.02em;
+  font-family: var(--font-geist-sans);
 }
 
 .playground-subtitle {
@@ -33,6 +77,7 @@
   margin: 0;
   font-weight: 400;
   line-height: 1.5;
+  font-family: var(--font-geist-sans);
 }
 
 /* Tabs Container */
@@ -47,7 +92,7 @@
   gap: var(--space-1, 0.25rem);
   padding: var(--space-1, 0.25rem);
   background-color: var(--gray-3);
-  border-radius: var(--radius-4, 12px);
+  border-radius: var(--radius-5, 20px);
   margin-bottom: var(--space-6, 2rem);
   overflow-x: auto;
   scroll-behavior: smooth;
@@ -59,22 +104,26 @@
   align-items: center;
   gap: var(--space-2, 0.5rem);
   padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-radius: var(--radius-3, 8px);
+  border-radius: var(--radius-4, 16px);
   border: none;
   background: transparent;
   color: var(--gray-11);
   font-size: var(--font-size-3, 0.875rem);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
   white-space: nowrap;
   position: relative;
   min-width: max-content;
+  font-family: var(--font-geist-sans);
+  transform: translateY(0);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .playground-tabs-trigger:hover {
   background-color: var(--gray-4);
   color: var(--gray-12);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .playground-tabs-trigger:focus-visible {
@@ -85,11 +134,31 @@
 .playground-tabs-trigger[data-state='active'] {
   background-color: var(--violet-9);
   color: var(--violet-contrast);
-  box-shadow: var(--shadow-2, 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06));
+  transform: translateY(0);
+  box-shadow:
+    var(--shadow-2, 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)),
+    0 0 0 1px var(--violet-8);
+  position: relative;
 }
+
+/* .playground-tabs-trigger[data-state='active']::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background-color: var(--violet-9);
+  border-radius: 1px;
+} */
 
 .playground-tabs-trigger[data-state='active']:hover {
   background-color: var(--violet-10);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px var(--violet-8);
 }
 
 /* Tab Icons */
@@ -102,7 +171,7 @@
 /* Content Area */
 .playground-content {
   background-color: white;
-  border-radius: var(--radius-4, 12px);
+  border-radius: var(--radius-5, 20px);
   border: 1px solid var(--gray-6);
   box-shadow: var(
     --shadow-3,
@@ -112,6 +181,15 @@
   overflow: hidden;
   padding: var(--space-6, 2rem);
   min-height: 400px;
+  transition: box-shadow 0.2s ease;
+}
+
+.playground-content:hover {
+  box-shadow: var(
+    --shadow-3,
+    0 8px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1)
+  );
 }
 
 /* Welcome Content Styling */
@@ -125,6 +203,7 @@
   font-weight: 600;
   color: var(--gray-12);
   margin: 0 0 var(--space-3, 0.75rem) 0;
+  font-family: var(--font-geist-sans);
 }
 
 .playground-welcome p {
@@ -132,6 +211,7 @@
   color: var(--gray-11);
   margin: 0;
   line-height: 1.6;
+  font-family: var(--font-geist-sans);
 }
 
 /* Tab Content Specific Styling */
@@ -149,6 +229,7 @@
   font-weight: 600;
   color: var(--gray-12);
   margin: 0 0 var(--space-4, 1rem) 0;
+  font-family: var(--font-geist-sans);
 }
 
 .smart-search-container p,
@@ -158,6 +239,7 @@
   color: var(--gray-11);
   line-height: 1.6;
   margin: 0;
+  font-family: var(--font-geist-sans);
 }
 
 /* Loading Styling */
@@ -168,6 +250,7 @@
   min-height: 50vh;
   color: var(--gray-11);
   font-size: var(--font-size-3, 0.875rem);
+  font-family: var(--font-geist-sans);
 }
 
 /* Responsive Design */
@@ -190,17 +273,8 @@
     font-size: var(--font-size-2, 0.75rem);
   }
 
-  .playground-tabs-content {
+  .playground-content {
     padding: var(--space-4, 1rem);
-  }
-
-  .playground-placeholder {
-    min-height: 200px;
-  }
-
-  .playground-placeholder-icon {
-    width: 36px;
-    height: 36px;
   }
 }
 
@@ -219,27 +293,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Custom CSS Variables for spacing and typography */
-:root {
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 2rem;
-  --space-8: 3rem;
-
-  --font-size-2: 0.75rem;
-  --font-size-3: 0.875rem;
-  --font-size-4: 1rem;
-  --font-size-6: 1.5rem;
-  --font-size-7: 2rem;
-  --font-size-8: 2.5rem;
-
-  --radius-3: 8px;
-  --radius-4: 12px;
-
-  --shadow-2: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-3: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
