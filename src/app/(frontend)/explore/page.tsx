@@ -42,9 +42,9 @@ interface ConceptSlider {
 const conceptSliders: ConceptSlider[] = [
   {
     id: 'adventure',
-    label: 'Avontuur vs Rust',
-    leftLabel: 'Rustig & Contemplatief',
-    rightLabel: 'Avontuurlijk & Actie',
+    label: 'Avontuur',
+    leftLabel: 'Rustig',
+    rightLabel: 'Avontuurlijk',
     value: 0,
     icon: '🏔️',
   },
@@ -59,16 +59,16 @@ const conceptSliders: ConceptSlider[] = [
   {
     id: 'complexity',
     label: 'Complexiteit',
-    leftLabel: 'Eenvoudig & Luchtig',
-    rightLabel: 'Complex & Diepgaand',
+    leftLabel: 'Eenvoudig',
+    rightLabel: 'Complex',
     value: 0,
     icon: '🧠',
   },
   {
     id: 'emotion',
-    label: 'Emotionele Intensiteit',
-    leftLabel: 'Licht & Ontspannen',
-    rightLabel: 'Intens & Emotioneel',
+    label: 'Emotie',
+    leftLabel: 'Licht',
+    rightLabel: 'Intens',
     value: 0,
     icon: '🎭',
   },
@@ -76,7 +76,7 @@ const conceptSliders: ConceptSlider[] = [
     id: 'realism',
     label: 'Realisme',
     leftLabel: 'Fantasy & Sci-Fi',
-    rightLabel: 'Realistisch & Grounded',
+    rightLabel: 'Realistisch',
     value: 0,
     icon: '🌟',
   },
@@ -223,26 +223,17 @@ export default function ExplorePage() {
 
   return (
     <div className="explore-container">
-      <div className="explore-header">
-        <h1>🎛️ Film Explore</h1>
-        <p>Ontdek films door te spelen met concept sliders - geen zoekterm nodig!</p>
-      </div>
-
       {/* Concept Sliders */}
       <div className="concept-sliders-container">
         <div className="sliders-header">
-          <h3>🎭 Film Dimensies</h3>
-          <p>
-            Beweeg de sliders om films te ontdekken die passen bij je voorkeuren
-            {loading && <span className="real-time-loading"> • 🔄 Zoeken...</span>}
-          </p>
+          <h3>🎭 Explore</h3>
           <div className="slider-controls">
-            <button onClick={resetSliders} className="reset-button" type="button">
+            {/* <button onClick={resetSliders} className="reset-button" type="button">
               🔄 Reset Sliders
-            </button>
-            <button onClick={getRandomFilms} className="random-button" type="button">
+            </button> */}
+            {/* <button onClick={getRandomFilms} className="random-button" type="button">
               🎲 Willekeurige Films
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -252,19 +243,24 @@ export default function ExplorePage() {
               <div className="slider-header">
                 <span className="slider-icon">{slider.icon}</span>
                 <h4 className="slider-title">{slider.label}</h4>
-                <span className="slider-value">
-                  {slider.value === 0
-                    ? 'Neutraal'
-                    : slider.value > 0
-                      ? `+${(slider.value * 100).toFixed(0)}%`
-                      : `${(slider.value * 100).toFixed(0)}%`}
-                </span>
               </div>
+              <span className="slider-value">
+                {slider.value === 0
+                  ? 'Neutraal'
+                  : slider.value > 0
+                    ? `+${(slider.value * 100).toFixed(0)}%`
+                    : `${(slider.value * 100).toFixed(0)}%`}
+                {slider.value < 0
+                  ? ` (${slider.leftLabel})`
+                  : slider.value > 0
+                    ? ` (${slider.rightLabel})`
+                    : ''}
+              </span>
 
-              <div className="slider-labels">
+              {/* <div className="slider-labels">
                 <span className="left-label">{slider.leftLabel}</span>
                 <span className="right-label">{slider.rightLabel}</span>
-              </div>
+              </div> */}
 
               <input
                 type="range"
@@ -276,26 +272,13 @@ export default function ExplorePage() {
                 className="concept-slider"
                 disabled={loading}
               />
-
-              <div className="slider-markers">
-                <span className="marker left">←</span>
-                <span className="marker center">●</span>
-                <span className="marker right">→</span>
-              </div>
             </div>
           ))}
-        </div>
-
-        <div className="concept-explanation">
-          <p>
-            💡 <strong>Tip:</strong> Beweeg de sliders om verschillende soorten films te ontdekken.
-            Hoe verder van het midden, hoe sterker de invloed op de resultaten!
-          </p>
         </div>
       </div>
 
       {/* Navigation */}
-      <div className="action-sections">
+      {/* <div className="action-sections">
         <div className="search-section">
           <button onClick={() => router.push('/search')} className="search-button">
             🔍 Zoeken met Tekst
@@ -321,7 +304,7 @@ export default function ExplorePage() {
             Krijg gepersonaliseerde filmsuggties op basis van je favorieten
           </p>
         </div>
-      </div>
+      </div> */}
 
       {error && (
         <div className="error-message">
@@ -331,13 +314,13 @@ export default function ExplorePage() {
 
       {explorePerformed && !loading && !error && (
         <div className="results-summary">
-          <p>
+          {/* <p>
             {results.length === 0
               ? 'Geen films gevonden met deze instellingen'
               : `${results.length} film${results.length !== 1 ? 's' : ''} gevonden`}
-          </p>
+          </p> */}
 
-          {Object.values(lastConceptWeights).some((w) => w !== 0) && (
+          {/* {Object.values(lastConceptWeights).some((w) => w !== 0) && (
             <div className="concept-weights-applied">
               <h4>🎛️ Actieve Concept Filters:</h4>
               <div className="applied-weights">
@@ -362,7 +345,7 @@ export default function ExplorePage() {
                   })}
               </div>
             </div>
-          )}
+          )} */}
         </div>
       )}
 
@@ -388,49 +371,49 @@ export default function ExplorePage() {
           min-height: 100vh;
           background-color: #ffffff;
           color: #333333;
-          max-width: 1200px;
+          max-width: 1400px;
           margin: 0 auto;
-          padding: 2rem;
+          padding: 1rem;
         }
 
         .explore-header {
           text-align: center;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
         }
 
         .explore-header h1 {
-          font-size: 2.5rem;
+          font-size: 2rem;
           color: #222222;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.3rem;
         }
 
         .explore-header p {
-          font-size: 1.1rem;
+          font-size: 1rem;
           color: #555555;
         }
 
         .concept-sliders-container {
           background-color: #f8f9fa;
-          padding: 2rem;
-          border-radius: 12px;
-          margin-bottom: 2rem;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          padding: 1.5rem;
+          border-radius: 8px;
+          margin-bottom: 1.5rem;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .sliders-header {
-          margin-bottom: 1.5rem;
+          margin-bottom: 1rem;
         }
 
         .sliders-header h3 {
-          font-size: 1.8rem;
-          margin-bottom: 0.5rem;
+          font-size: 1.5rem;
+          margin-bottom: 0.3rem;
           color: #333333;
         }
 
         .sliders-header p {
-          font-size: 1rem;
+          font-size: 0.9rem;
           color: #666666;
-          margin-bottom: 1rem;
+          margin-bottom: 0.8rem;
         }
 
         .real-time-loading {
@@ -451,16 +434,16 @@ export default function ExplorePage() {
 
         .slider-controls {
           display: flex;
-          gap: 1rem;
-          margin-top: 1rem;
+          gap: 0.8rem;
+          margin-top: 0.8rem;
         }
 
         .reset-button,
         .random-button {
-          padding: 0.75rem 1.5rem;
-          font-size: 1rem;
+          padding: 0.6rem 1.2rem;
+          font-size: 0.9rem;
           border: none;
-          border-radius: 8px;
+          border-radius: 6px;
           cursor: pointer;
           transition: all 0.2s;
           font-weight: 600;
@@ -488,15 +471,15 @@ export default function ExplorePage() {
 
         .sliders-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 1rem;
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          gap: 0.8rem;
         }
 
         .slider-container {
           background-color: #ffffff;
-          padding: 1rem;
-          border-radius: 8px;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+          padding: 0.8rem;
+          border-radius: 6px;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
           border: 1px solid #e9ecef;
         }
 
@@ -605,16 +588,16 @@ export default function ExplorePage() {
         .action-sections {
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
-          gap: 1.5rem;
-          margin-bottom: 2rem;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
         }
 
         .search-section,
         .favorites-section,
         .personal-recommendations-section {
           text-align: center;
-          padding: 2rem;
-          border-radius: 12px;
+          padding: 1.5rem;
+          border-radius: 8px;
           color: white;
         }
 
@@ -633,15 +616,15 @@ export default function ExplorePage() {
         .search-button,
         .favorites-button,
         .personal-recommendations-button {
-          padding: 1rem 2rem;
-          font-size: 1.1rem;
+          padding: 0.8rem 1.5rem;
+          font-size: 1rem;
           background-color: rgba(255, 255, 255, 0.9);
           border: none;
-          border-radius: 8px;
+          border-radius: 6px;
           cursor: pointer;
           transition: all 0.2s;
           font-weight: 600;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.4rem;
         }
 
         .search-button {
@@ -666,7 +649,7 @@ export default function ExplorePage() {
 
         .section-description {
           color: rgba(255, 255, 255, 0.9);
-          font-size: 1rem;
+          font-size: 0.9rem;
           margin: 0;
         }
 
@@ -687,10 +670,10 @@ export default function ExplorePage() {
 
         .results-summary {
           text-align: center;
-          margin: 2rem 0;
-          padding: 1.5rem;
+          margin: 1.5rem 0;
+          padding: 1rem;
           background-color: #f8f9fa;
-          border-radius: 8px;
+          border-radius: 6px;
         }
 
         .concept-weights-applied {
@@ -735,20 +718,21 @@ export default function ExplorePage() {
 
         @media (max-width: 768px) {
           .explore-container {
-            padding: 1rem;
+            padding: 0.8rem;
           }
 
           .explore-header h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
           }
 
           .action-sections {
             grid-template-columns: 1fr;
-            gap: 1rem;
+            gap: 0.8rem;
           }
 
           .slider-controls {
             flex-direction: column;
+            gap: 0.5rem;
           }
 
           .sliders-grid {
