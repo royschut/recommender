@@ -203,7 +203,7 @@ export default function SearchPage() {
           <p>{error}</p>
         </div>
       )}
-
+      {/*
       {searchPerformed && !loading && !error && (
         <div className="results-summary">
           <p>
@@ -212,7 +212,7 @@ export default function SearchPage() {
               : `${results.length} film${results.length !== 1 ? 's' : ''} gevonden voor "${query}"`}
           </p>
         </div>
-      )}
+      )} */}
 
       {results.length > 0 && (
         <CardGrid>
@@ -290,7 +290,7 @@ export default function SearchPage() {
           background-color: #f8f9fa;
           padding: 2rem;
           border-radius: 12px;
-          margin-top: 1rem;
+          margin-top: 0;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 

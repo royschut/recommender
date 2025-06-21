@@ -159,13 +159,13 @@ export default function FavoritesPage() {
         ← Terug naar zoeken
       </button>
 
-      <div className="header">
+      {/* <div className="header">
         <h1>❤️ Mijn Favorieten</h1>
         <p className="subtitle">
           Je hebt {favorites.length} favoriet{favorites.length !== 1 ? 'e' : ''} film
           {favorites.length !== 1 ? 's' : ''}
         </p>
-      </div>
+      </div> */}
 
       {favorites.length === 0 ? (
         <div className="no-favorites">
@@ -224,13 +224,6 @@ export default function FavoritesPage() {
 
           <div className="favorites-list-section">
             <h2>❤️ Jouw Favorieten ({favorites.length})</h2>
-            <div className="favorites-summary">
-              <p>
-                Hier zijn al je favoriete films. Klik op de ❤️ knop om films uit je favorieten te
-                verwijderen.
-              </p>
-            </div>
-
             <CardGrid>
               {favorites.map((favorite) => (
                 <div key={favorite.id} className="favorite-item">
