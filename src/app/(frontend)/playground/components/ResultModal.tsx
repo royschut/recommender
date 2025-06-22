@@ -13,6 +13,7 @@ import {
 } from '@radix-ui/react-icons'
 import { cn } from '../utils/cn'
 import Card from './ui/Card'
+import Snackbar from './ui/Snackbar'
 
 interface Movie {
   id: string
@@ -45,6 +46,8 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
   const [recommendations, setRecommendations] = useState<Movie[]>([])
   const [loadingRecommendations, setLoadingRecommendations] = useState(false)
   const [scrollPosition, setScrollPosition] = useState(0)
+  const [showRecommendationsSnackbar, setShowRecommendationsSnackbar] = useState(false)
+  const [hasShownRecommendationsSnackbar, setHasShownRecommendationsSnackbar] = useState(false)
 
   // Function to handle movie change within modal
   const handleMovieChange = (newMovie: Movie) => {
@@ -78,6 +81,12 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
         if (response.ok) {
           const data = await response.json()
           setRecommendations(data.recommendations || [])
+          
+          // Show snackbar only for the first time recommendations are shown
+          if (data.recommendations?.length > 0 && !hasShownRecommendationsSnackbar) {
+            setShowRecommendationsSnackbar(true)
+            setHasShownRecommendationsSnackbar(true)
+          }
         }
       } catch (error) {
         console.error('Recommendations error:', error)
@@ -303,6 +312,14 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
           </div>
         </Dialog.Content>
       </Dialog.Portal>
+
+      <Snackbar
+        open={showRecommendationsSnackbar}
+        onOpenChange={setShowRecommendationsSnackbar}
+        message="Semantisch gerelateerde items worden automatisch gematcht"
+        variant="info"
+        icon={<VideoIcon className="w-5 h-5" />}
+      />
     </Dialog.Root>
   )
 }

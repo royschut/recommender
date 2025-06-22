@@ -12,7 +12,9 @@ import {
 } from '@radix-ui/react-icons'
 import { cn } from '../utils/cn'
 import Card from './ui/Card'
+import Snackbar from './ui/Snackbar'
 import ResultModal from './ResultModal'
+import Snackbar from './ui/Snackbar'
 
 interface Movie {
   id: string
@@ -40,6 +42,8 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
   const [results, setResults] = useState<Movie[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
+  const [showSearchSnackbar, setShowSearchSnackbar] = useState(false)
+  const [hasShownSearchSnackbar, setHasShownSearchSnackbar] = useState(false)
 
   const debouncedSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -58,6 +62,12 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
       if (response.ok) {
         const data = await response.json()
         setResults(data.results || [])
+        
+        // Show snackbar only for the first search
+        if (data.results?.length > 0 && !hasShownSearchSnackbar) {
+          setShowSearchSnackbar(true)
+          setHasShownSearchSnackbar(true)
+        }
       }
     } catch (error) {
       console.error('Search error:', error)
@@ -166,6 +176,14 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
         onOpenChange={(open) => !open && setSelectedMovie(null)}
         onMovieChange={(movie) => setSelectedMovie(movie)}
       />
+
+      <Snackbar
+        open={showSearchSnackbar}
+        onOpenChange={setShowSearchSnackbar}
+        message="Zoekresultaten semantisch gevonden, op basis van jouw zoekterm. Zie de match score."
+        variant="info"
+        icon={<MagnifyingGlassIcon className="w-5 h-5" />}
+      />
     </div>
   )
 }
@@ -242,12 +260,10 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, isDummy = false }
       variant="default"
       padding="none"
       className={cn(
-        // 'max-h-[440px]',
-        'overflow-hidden cursor-pointer transition-all duration-500 group',
-        'hover:shadow-2xl hover:-translate-y-3 hover:scale-[1.03]',
-        'rounded-2xl border-0 bg-white/80 backdrop-blur-sm',
-        'shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)]',
-        isDummy && 'opacity-50 cursor-default hover:transform-none hover:shadow-soft',
+        'overflow-hidden cursor-pointer transition-transform duration-200 ease-out group',
+        'hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01]',
+        'rounded-2xl border-0 bg-white shadow-sm',
+        isDummy && 'opacity-50 cursor-default hover:transform-none hover:shadow-sm',
       )}
       onClick={onClick}
     >
@@ -256,7 +272,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, isDummy = false }
           <img
             src={getPosterUrl()}
             alt={movie.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300 ease-out"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -268,32 +284,33 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, isDummy = false }
         )}
 
         {getMatchScore() && (
-          <div className="absolute top-3 left-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-2 py-1 rounded-lg text-xs font-semibold shadow-lg backdrop-blur-sm flex items-center gap-1 border border-white/20">
+          <div className="absolute top-3 right-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-2 py-1 rounded-lg text-xs font-semibold shadow-lg backdrop-blur-sm flex items-center gap-1 border border-white/20">
             <InfoCircledIcon className="w-3 h-3" />
-            {Math.round((getMatchScore() || 0) * 100)}%
+            MATCH {Math.round((getMatchScore() || 0) * 100)}%
           </div>
         )}
 
-        {getRating() && (
-          <div className="absolute top-3 right-3 bg-black/60 text-white px-2 py-1 rounded-lg text-xs font-medium backdrop-blur-md flex items-center gap-1 border border-white/10">
-            <StarFilledIcon className="w-3 h-3 text-amber-400" />
-            {getRating()?.toFixed(1)}
-          </div>
-        )}
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
       </div>
 
       <div className="p-3 space-y-1.5">
         <div className="space-y-0.5">
-          <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-2 group-hover:text-violet-600 transition-colors duration-300">
+          <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-2 group-hover:text-violet-600 transition-colors duration-200">
             {movie.title}
           </h3>
           {getReleaseYear() && (
-            <p className="text-xs text-gray-500 font-medium flex items-center gap-1">
-              <CalendarIcon className="w-3 h-3 text-gray-400" />
-              {getReleaseYear()}
-            </p>
+            <div className="text-xs text-gray-500 font-medium flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <CalendarIcon className="w-3 h-3 text-gray-400" />
+                {getReleaseYear()}
+              </div>
+              {getRating() && (
+                <div className="flex items-center gap-1 text-gray-400">
+                  <StarFilledIcon className="w-3 h-3 text-amber-400" />
+                  <span className="text-xs">{getRating()?.toFixed(1)}</span>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
