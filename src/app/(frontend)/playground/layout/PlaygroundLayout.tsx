@@ -4,6 +4,9 @@ import React from 'react'
 import { Tabs } from 'radix-ui'
 import { MagnifyingGlassIcon, PersonIcon, HeartIcon } from '@radix-ui/react-icons'
 import { useRouter, usePathname } from 'next/navigation'
+import { cn } from '../utils/cn'
+import TabTrigger from '../components/ui/TabTrigger'
+import Card from '../components/ui/Card'
 import '../index.css'
 import contentData from '../content.json'
 
@@ -50,32 +53,32 @@ const PlaygroundLayout: React.FC<PlaygroundLayoutProps> = ({ children, activeTab
   }
 
   return (
-    <div className="playground-container">
-      <header className="playground-header">
-        <h1 className="playground-title">{playground.title}</h1>
-        <p className="playground-subtitle">{playground.subtitle}</p>
-      </header>
+    <div className="min-h-screen bg-violet-50 font-sans">
+      <div className="px-8 pt-12">
+        <Tabs.Root className="max-w-5xl mx-auto" value={currentTab} onValueChange={handleTabChange}>
+          {/* Subtle header integrated with tabs */}
+          <div className="text-center mb-8">
+            <Tabs.List className="flex justify-center gap-8 border-b border-gray-200">
+              <TabTrigger value="smart-search" icon={<MagnifyingGlassIcon />}>
+                {playground.tabs.smartSearch.label}
+              </TabTrigger>
 
-      <Tabs.Root className="playground-tabs" value={currentTab} onValueChange={handleTabChange}>
-        <Tabs.List className="playground-tabs-list" aria-label="Playground navigation">
-          <Tabs.Trigger className="playground-tabs-trigger" value="smart-search">
-            <MagnifyingGlassIcon className="playground-tabs-icon" />
-            <span>{playground.tabs.smartSearch.label}</span>
-          </Tabs.Trigger>
+              <TabTrigger value="personal-discovery" icon={<PersonIcon />}>
+                {playground.tabs.personalDiscovery.label}
+              </TabTrigger>
 
-          <Tabs.Trigger className="playground-tabs-trigger" value="personal-discovery">
-            <PersonIcon className="playground-tabs-icon" />
-            <span>{playground.tabs.personalDiscovery.label}</span>
-          </Tabs.Trigger>
+              <TabTrigger value="explore-by-taste" icon={<HeartIcon />}>
+                {playground.tabs.exploreByTaste.label}
+              </TabTrigger>
+            </Tabs.List>
+            <p className="text-xs text-gray-400 mt-4 font-light tracking-wide uppercase">
+              {playground.subtitle}
+            </p>
+          </div>
 
-          <Tabs.Trigger className="playground-tabs-trigger" value="explore-by-taste">
-            <HeartIcon className="playground-tabs-icon" />
-            <span>{playground.tabs.exploreByTaste.label}</span>
-          </Tabs.Trigger>
-        </Tabs.List>
-
-        <div className="playground-content">{children}</div>
-      </Tabs.Root>
+          <div className="min-h-[600px] pb-8">{children}</div>
+        </Tabs.Root>
+      </div>
     </div>
   )
 }

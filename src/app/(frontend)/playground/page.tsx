@@ -12,7 +12,7 @@ const Playground = () => {
   }, [router])
 
   return (
-    <div className="playground-loading">
+    <div className="flex justify-center items-center min-h-[50vh] text-gray-11 text-sm font-sans">
       <p>Loading playground...</p>
     </div>
   )

@@ -1,4 +1,7 @@
-/* Import layout CSS */
+/* Playground specific Tailwind and Radix UI integration */
+@import 'tailwindcss';
+
+/* Import layout CSS for playground styling */
 @import './layout/layout.css';
 
 /* Radix UI Background color */
@@ -9,6 +12,7 @@
   --color-background: #f9fafb;
 }
 
+/* Radix UI Color System */
 :root,
 .light,
 .light-theme {
@@ -42,6 +46,28 @@
   --gray-surface: #ffffffcc;
   --gray-indicator: #858590;
   --gray-track: #858590;
+
+  /* Violet colors for primary interactions */
+  --violet-1: #fdfcfe;
+  --violet-2: #fbfaff;
+  --violet-3: #f5f2ff;
+  --violet-4: #ede9fe;
+  --violet-5: #e4defc;
+  --violet-6: #d8cdf8;
+  --violet-7: #c4b5fd;
+  --violet-8: #a78bfa;
+  --violet-9: #8b5cf6;
+  --violet-10: #7c3aed;
+  --violet-11: #6d28d9;
+  --violet-12: #4c1d95;
+  --violet-contrast: #ffffff;
+  --violet-7: #c8b5f3;
+  --violet-8: #b197ec;
+  --violet-9: #8b5cf6;
+  --violet-10: #7c3aed;
+  --violet-11: #6d28d9;
+  --violet-12: #3e1065;
+  --violet-contrast: #ffffff;
 }
 
 /* Radix UI Gray scale colors */
@@ -157,4 +183,21 @@
       --violet-track: oklch(51.6% 0.1025 298.1);
     }
   }
+}
+
+/* Line clamp utilities for text truncation */
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
