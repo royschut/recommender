@@ -1,7 +1,15 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
+import {
+  MagnifyingGlassIcon,
+  StarFilledIcon,
+  CalendarIcon,
+  VideoIcon,
+  ReloadIcon,
+  ExclamationTriangleIcon,
+  InfoCircledIcon,
+} from '@radix-ui/react-icons'
 import { cn } from '../utils/cn'
 import Card from './ui/Card'
 import ResultModal from './ResultModal'
@@ -33,7 +41,6 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
   const [loading, setLoading] = useState(false)
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
 
-  // Debounced search
   const debouncedSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setResults([])
@@ -60,7 +67,6 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
     }
   }, [])
 
-  // Debounce effect
   useEffect(() => {
     const timer = setTimeout(() => {
       debouncedSearch(query)
@@ -68,13 +74,6 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
 
     return () => clearTimeout(timer)
   }, [query, debouncedSearch])
-
-  // Dummy cards for when no results yet
-  const dummyCards = Array.from({ length: 8 }, (_, i) => ({
-    id: `dummy-${i}`,
-    title: 'Placeholder',
-    description: 'Zoek om films te ontdekken...',
-  }))
 
   const displayResults = results.length > 0 ? results : []
 
@@ -102,10 +101,12 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
       {loading && (
         <div className="space-y-8">
           <div className="text-center py-8">
-            <div className="inline-block animate-spin w-8 h-8 border-3 border-violet-200 border-t-violet-500 rounded-full mb-4"></div>
-            <p className="text-gray-600 text-lg font-medium">Zoeken naar perfecte matches...</p>
+            <ReloadIcon className="inline-block animate-spin w-8 h-8 text-violet-500 mb-4" />
+            <p className="text-gray-600 text-lg font-medium flex items-center justify-center gap-2">
+              <MagnifyingGlassIcon className="w-5 h-5" />
+              Zoeken naar perfecte matches...
+            </p>
           </div>
-          {/* Skeleton Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }, (_, i) => (
               <SkeletonCard key={`skeleton-${i}`} />
@@ -131,11 +132,15 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
       {/* Empty State */}
       {!loading && !query && (
         <div className="text-center py-20">
-          <div className="text-gray-300 text-8xl mb-6">🎬</div>
-          <h3 className="text-gray-700 text-2xl font-semibold mb-3">
+          <VideoIcon className="w-20 h-20 text-gray-300 mx-auto mb-6" />
+          <h3 className="text-gray-700 text-2xl font-semibold mb-3 flex items-center justify-center gap-2">
+            <InfoCircledIcon className="w-6 h-6" />
             Ontdek je volgende favoriete film
           </h3>
-          <p className="text-gray-500 text-lg mb-2">Begin met typen om films te zoeken</p>
+          <p className="text-gray-500 text-lg mb-2 flex items-center justify-center gap-2">
+            <MagnifyingGlassIcon className="w-5 h-5" />
+            Begin met typen om films te zoeken
+          </p>
           <p className="text-gray-400 max-w-md mx-auto">
             Gebruik beschrijvingen zoals "romantische komedie" of "spannende thriller"
           </p>
@@ -145,14 +150,19 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
       {/* No Results */}
       {!loading && query && results.length === 0 && (
         <div className="text-center py-16">
-          <div className="text-gray-300 text-6xl mb-4">🔍</div>
-          <h3 className="text-gray-600 text-xl font-semibold mb-2">Geen resultaten gevonden</h3>
+          <ExclamationTriangleIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-gray-600 text-xl font-semibold mb-2 flex items-center justify-center gap-2">
+            <MagnifyingGlassIcon className="w-5 h-5" />
+            Geen resultaten gevonden
+          </h3>
           <p className="text-gray-500 text-lg mb-1">voor "{query}"</p>
-          <p className="text-gray-400">Probeer andere woorden of beschrijvingen</p>
+          <p className="text-gray-400 flex items-center justify-center gap-2">
+            <ReloadIcon className="w-4 h-4" />
+            Probeer andere woorden of beschrijvingen
+          </p>
         </div>
       )}
 
-      {/* Result Modal */}
       <ResultModal
         movie={selectedMovie}
         open={!!selectedMovie}
@@ -171,28 +181,23 @@ interface MovieCardProps {
 const SkeletonCard: React.FC = () => {
   return (
     <Card variant="default" padding="none" className="overflow-hidden animate-pulse">
-      {/* Poster Skeleton */}
       <div className="aspect-[2/3] bg-gray-200 relative">
         <div className="absolute top-3 left-3 w-16 h-6 bg-gray-300 rounded-md"></div>
         <div className="absolute top-3 right-3 w-12 h-6 bg-gray-300 rounded-md"></div>
       </div>
-      
-      {/* Content Skeleton */}
+
       <div className="p-4 space-y-3">
-        {/* Title skeleton */}
         <div className="space-y-2">
           <div className="h-4 bg-gray-200 rounded w-4/5"></div>
           <div className="h-3 bg-gray-200 rounded w-1/3"></div>
         </div>
-        
-        {/* Genres skeleton */}
+
         <div className="flex gap-1">
           <div className="h-6 bg-gray-200 rounded-full w-16"></div>
           <div className="h-6 bg-gray-200 rounded-full w-14"></div>
           <div className="h-6 bg-gray-200 rounded-full w-12"></div>
         </div>
-        
-        {/* Description skeleton */}
+
         <div className="space-y-2">
           <div className="h-3 bg-gray-200 rounded w-full"></div>
           <div className="h-3 bg-gray-200 rounded w-4/5"></div>
@@ -221,7 +226,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, isDummy = false }
     if (!movie.genres) return []
     if (Array.isArray(movie.genres)) {
       if (movie.genres.length > 0 && typeof movie.genres[0] === 'object') {
-        return (movie.genres as Array<{ genre: string }>).map(g => g.genre)
+        return (movie.genres as Array<{ genre: string }>).map((g) => g.genre)
       }
       return movie.genres as string[]
     }
@@ -247,7 +252,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, isDummy = false }
       )}
       onClick={onClick}
     >
-      {/* Poster Section */}
       <div className="relative aspect-[2/3] bg-gradient-to-br from-gray-100 to-gray-200">
         {getPosterUrl() ? (
           <img
@@ -258,55 +262,54 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, isDummy = false }
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
-              <div className="text-gray-400 text-4xl mb-2">🎬</div>
+              <VideoIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
               <span className="text-gray-500 text-xs">Geen poster</span>
             </div>
           </div>
         )}
-        
-        {/* Match Score Badge */}
+
         {getMatchScore() && (
-          <div className="absolute top-3 left-3 bg-violet-500 text-white px-2 py-1 rounded-md text-xs font-semibold shadow-lg">
+          <div className="absolute top-3 left-3 bg-violet-500 text-white px-2 py-1 rounded-md text-xs font-semibold shadow-lg flex items-center gap-1">
+            <InfoCircledIcon className="w-3 h-3" />
             {Math.round((getMatchScore() || 0) * 100)}% match
           </div>
         )}
 
-        {/* Rating Badge */}
         {getRating() && (
-          <div className="absolute top-3 right-3 bg-black/70 text-white px-2 py-1 rounded-md text-xs font-medium backdrop-blur-sm">
-            ⭐ {getRating()?.toFixed(1)}
+          <div className="absolute top-3 right-3 bg-black/70 text-white px-2 py-1 rounded-md text-xs font-medium backdrop-blur-sm flex items-center gap-1">
+            <StarFilledIcon className="w-3 h-3 text-yellow-400" />
+            {getRating()?.toFixed(1)}
           </div>
         )}
 
-        {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
-      {/* Content Section */}
       <div className="p-4 space-y-3">
-        {/* Title and Year */}
         <div className="space-y-1">
           <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-2 group-hover:text-violet-600 transition-colors">
             {movie.title}
           </h3>
           {getReleaseYear() && (
-            <p className="text-sm text-gray-500 font-medium">
+            <p className="text-sm text-gray-500 font-medium flex items-center gap-1">
+              <CalendarIcon className="w-3 h-3" />
               {getReleaseYear()}
             </p>
           )}
         </div>
 
-        {/* Genres */}
         {getGenres().length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {getGenres().slice(0, 3).map((genre, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-violet-100 text-violet-700 text-xs rounded-full font-medium"
-              >
-                {genre}
-              </span>
-            ))}
+            {getGenres()
+              .slice(0, 3)
+              .map((genre, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 bg-violet-100 text-violet-700 text-xs rounded-full font-medium"
+                >
+                  {genre}
+                </span>
+              ))}
             {getGenres().length > 3 && (
               <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
                 +{getGenres().length - 3}
@@ -315,11 +318,8 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, isDummy = false }
           </div>
         )}
 
-        {/* Description */}
         {getDescription() && (
-          <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
-            {getDescription()}
-          </p>
+          <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{getDescription()}</p>
         )}
       </div>
     </Card>
