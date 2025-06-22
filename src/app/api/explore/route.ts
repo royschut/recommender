@@ -171,10 +171,8 @@ export async function GET(request: NextRequest) {
 
       // Add genre filter if specified
       if (selectedGenres.length > 0) {
-        whereConditions.genres = {
-          genre: {
-            in: selectedGenres,
-          },
+        whereConditions['genres.genre'] = {
+          in: selectedGenres,
         }
       }
 
@@ -320,10 +318,8 @@ export async function GET(request: NextRequest) {
 
       // Add genre filter if specified
       if (selectedGenres.length > 0) {
-        whereConditions.genres = {
-          genre: {
-            in: selectedGenres,
-          },
+        whereConditions['genres.genre'] = {
+          in: selectedGenres,
         }
       }
 
