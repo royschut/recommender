@@ -38,12 +38,26 @@ interface ResultModalProps {
   movie: Movie | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  onMovieChange?: (movie: Movie) => void
 }
 
-const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange }) => {
+const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, onMovieChange }) => {
   const [recommendations, setRecommendations] = useState<Movie[]>([])
   const [loadingRecommendations, setLoadingRecommendations] = useState(false)
   const [scrollPosition, setScrollPosition] = useState(0)
+
+  // Function to handle movie change within modal
+  const handleMovieChange = (newMovie: Movie) => {
+    if (onMovieChange) {
+      onMovieChange(newMovie)
+    }
+    // Reset scroll position when changing movies
+    setScrollPosition(0)
+    const container = document.getElementById('recommendations-carousel')
+    if (container) {
+      container.scrollTo({ left: 0, behavior: 'smooth' })
+    }
+  }
 
   // Fetch recommendations when movie changes
   useEffect(() => {
@@ -272,7 +286,11 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange }) 
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {recommendations.map((rec) => (
-                    <RecommendationCard key={rec.id} movie={rec} />
+                    <RecommendationCard 
+                      key={rec.id} 
+                      movie={rec} 
+                      onClick={() => handleMovieChange(rec)}
+                    />
                   ))}
                 </div>
               ) : (
@@ -291,9 +309,10 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange }) 
 
 interface RecommendationCardProps {
   movie: Movie
+  onClick: () => void
 }
 
-const RecommendationCard: React.FC<RecommendationCardProps> = ({ movie }) => {
+const RecommendationCard: React.FC<RecommendationCardProps> = ({ movie, onClick }) => {
   const getPosterUrl = () => {
     return movie.image || movie.poster_path || movie.posterUrl
   }
@@ -311,8 +330,9 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ movie }) => {
         'hover:shadow-xl hover:-translate-y-1 hover:scale-105',
         'rounded-xl overflow-hidden',
       )}
+      onClick={onClick}
     >
-      <div className="aspect-[3/4] bg-gradient-to-br from-violet-50 via-gray-50 to-indigo-50">
+      <div className="relative aspect-[3/4] bg-gradient-to-br from-violet-50 via-gray-50 to-indigo-50">
         {getPosterUrl() ? (
           <img
             src={getPosterUrl()}
@@ -337,6 +357,9 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ movie }) => {
         <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-violet-600 transition-colors">
           {movie.title}
         </h4>
+        <p className="text-xs text-gray-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          Klik om te bekijken
+        </p>
       </div>
     </Card>
   )

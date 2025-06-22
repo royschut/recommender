@@ -164,6 +164,7 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
         movie={selectedMovie}
         open={!!selectedMovie}
         onOpenChange={(open) => !open && setSelectedMovie(null)}
+        onMovieChange={(movie) => setSelectedMovie(movie)}
       />
     </div>
   )

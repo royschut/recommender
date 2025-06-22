@@ -12,7 +12,7 @@ html {
   font-size: 18px;
   line-height: 32px;
 
-  background: rgb(0, 0, 0);
+  background-color: var(--color-violet-50);
   -webkit-font-smoothing: antialiased;
 }
 
