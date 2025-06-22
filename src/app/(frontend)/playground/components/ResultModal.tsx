@@ -81,7 +81,7 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
         if (response.ok) {
           const data = await response.json()
           setRecommendations(data.recommendations || [])
-          
+
           // Show snackbar only for the first time recommendations are shown
           if (data.recommendations?.length > 0 && !hasShownRecommendationsSnackbar) {
             setShowRecommendationsSnackbar(true)
@@ -295,9 +295,9 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {recommendations.map((rec) => (
-                    <RecommendationCard 
-                      key={rec.id} 
-                      movie={rec} 
+                    <RecommendationCard
+                      key={rec.id}
+                      movie={rec}
                       onClick={() => handleMovieChange(rec)}
                     />
                   ))}

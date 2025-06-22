@@ -14,7 +14,6 @@ import { cn } from '../utils/cn'
 import Card from './ui/Card'
 import Snackbar from './ui/Snackbar'
 import ResultModal from './ResultModal'
-import Snackbar from './ui/Snackbar'
 
 interface Movie {
   id: string
@@ -62,7 +61,7 @@ const SmartSearchTab: React.FC<SmartSearchTabProps> = ({ className }) => {
       if (response.ok) {
         const data = await response.json()
         setResults(data.results || [])
-        
+
         // Show snackbar only for the first search
         if (data.results?.length > 0 && !hasShownSearchSnackbar) {
           setShowSearchSnackbar(true)

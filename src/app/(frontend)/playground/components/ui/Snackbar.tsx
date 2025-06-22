@@ -61,9 +61,7 @@ const Snackbar: React.FC<SnackbarProps> = ({
         'flex items-center gap-3',
         'transition-all duration-300 ease-out',
         variants[variant],
-        isVisible
-          ? 'translate-y-0 opacity-100 scale-100'
-          : 'translate-y-4 opacity-0 scale-95'
+        isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-4 opacity-0 scale-95',
       )}
     >
       {icon || defaultIcons[variant]}
