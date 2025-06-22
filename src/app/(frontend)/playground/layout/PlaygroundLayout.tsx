@@ -54,8 +54,8 @@ const PlaygroundLayout: React.FC<PlaygroundLayoutProps> = ({ children, activeTab
 
   return (
     <div className="min-h-screen bg-violet-50 font-sans">
-      <div className="px-8 pt-12">
-        <Tabs.Root className="max-w-5xl mx-auto" value={currentTab} onValueChange={handleTabChange}>
+      <div className="px-8 pt-2">
+        <Tabs.Root className="mx-auto" value={currentTab} onValueChange={handleTabChange}>
           {/* Subtle header integrated with tabs */}
           <div className="text-center mb-8">
             <Tabs.List className="flex justify-center gap-8 border-b border-gray-200">
@@ -71,9 +71,6 @@ const PlaygroundLayout: React.FC<PlaygroundLayoutProps> = ({ children, activeTab
                 {playground.tabs.exploreByTaste.label}
               </TabTrigger>
             </Tabs.List>
-            <p className="text-xs text-gray-400 mt-4 font-light tracking-wide uppercase">
-              {playground.subtitle}
-            </p>
           </div>
 
           <div className="min-h-[600px] pb-8">{children}</div>

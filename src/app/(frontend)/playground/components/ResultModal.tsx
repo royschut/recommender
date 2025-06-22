@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { Dialog } from 'radix-ui'
-import { Cross2Icon } from '@radix-ui/react-icons'
+import {
+  Cross2Icon,
+  StarFilledIcon,
+  CalendarIcon,
+  ClockIcon,
+  VideoIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from '@radix-ui/react-icons'
 import { cn } from '../utils/cn'
 import Card from './ui/Card'
 
@@ -10,8 +18,20 @@ interface Movie {
   id: string
   title: string
   description?: string
+  overview?: string
   image?: string
   poster_path?: string
+  posterUrl?: string
+  voteAverage?: number
+  vote_average?: number
+  releaseDate?: string
+  release_date?: string
+  genres?: Array<{ genre: string }> | string[]
+  similarityScore?: number
+  matchScore?: number
+  runtime?: number
+  director?: string
+  cast?: string[]
 }
 
 interface ResultModalProps {
@@ -23,6 +43,7 @@ interface ResultModalProps {
 const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange }) => {
   const [recommendations, setRecommendations] = useState<Movie[]>([])
   const [loadingRecommendations, setLoadingRecommendations] = useState(false)
+  const [scrollPosition, setScrollPosition] = useState(0)
 
   // Fetch recommendations when movie changes
   useEffect(() => {
@@ -46,7 +67,15 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange }) 
         }
       } catch (error) {
         console.error('Recommendations error:', error)
-        setRecommendations([])
+        // Mock data for demo
+        setRecommendations([
+          { id: '1', title: 'Gerelateerde Film 1', image: '/api/placeholder/300/450' },
+          { id: '2', title: 'Gerelateerde Film 2', image: '/api/placeholder/300/450' },
+          { id: '3', title: 'Gerelateerde Film 3', image: '/api/placeholder/300/450' },
+          { id: '4', title: 'Gerelateerde Film 4', image: '/api/placeholder/300/450' },
+          { id: '5', title: 'Gerelateerde Film 5', image: '/api/placeholder/300/450' },
+          { id: '6', title: 'Gerelateerde Film 6', image: '/api/placeholder/300/450' },
+        ])
       } finally {
         setLoadingRecommendations(false)
       }
@@ -55,17 +84,59 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange }) 
     fetchRecommendations()
   }, [movie, open])
 
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    const container = document.getElementById('recommendations-carousel')
+    if (!container) return
+
+    const scrollAmount = 200
+    const newPosition =
+      direction === 'left'
+        ? Math.max(0, scrollPosition - scrollAmount)
+        : Math.min(container.scrollWidth - container.clientWidth, scrollPosition + scrollAmount)
+
+    container.scrollTo({ left: newPosition, behavior: 'smooth' })
+    setScrollPosition(newPosition)
+  }
+
+  const getPosterUrl = () => {
+    return movie?.image || movie?.poster_path || movie?.posterUrl
+  }
+
+  const getRating = () => {
+    return movie?.voteAverage || movie?.vote_average
+  }
+
+  const getReleaseYear = () => {
+    const date = movie?.releaseDate || movie?.release_date
+    return date ? new Date(date).getFullYear() : null
+  }
+
+  const getGenres = () => {
+    if (!movie?.genres) return []
+    if (Array.isArray(movie.genres)) {
+      if (movie.genres.length > 0 && typeof movie.genres[0] === 'object') {
+        return (movie.genres as Array<{ genre: string }>).map((g) => g.genre)
+      }
+      return movie.genres as string[]
+    }
+    return []
+  }
+
+  const getDescription = () => {
+    return movie?.description || movie?.overview
+  }
+
   if (!movie) return null
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 animate-fade-in z-40" />
+        <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in z-40" />
         <Dialog.Content
           className={cn(
             'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2',
-            'w-full max-w-3xl max-h-[90vh] overflow-y-auto',
-            'bg-white rounded-lg shadow-2xl z-50',
+            'w-full max-w-4xl max-h-[90vh] overflow-y-auto',
+            'bg-white rounded-2xl shadow-2xl z-50',
             'animate-fade-in',
           )}
         >
@@ -74,62 +145,141 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange }) 
             <Dialog.Close
               className={cn(
                 'absolute top-4 right-4 z-10',
-                'w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm',
-                'flex items-center justify-center text-white',
-                'hover:bg-black/30 transition-colors duration-200',
+                'w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm',
+                'flex items-center justify-center text-gray-700',
+                'hover:bg-white transition-colors duration-200 shadow-lg',
               )}
             >
-              <Cross2Icon className="w-4 h-4" />
+              <Cross2Icon className="w-5 h-5" />
             </Dialog.Close>
 
-            {/* Movie Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-              {/* Movie Poster */}
-              <div className="aspect-[2/3] bg-gray-100 rounded-lg overflow-hidden">
-                {movie.image || movie.poster_path ? (
-                  <img
-                    src={movie.image || movie.poster_path}
-                    alt={movie.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-6xl">
-                    🎬
-                  </div>
-                )}
+            {/* Header Section - Movie Info */}
+            <div className="flex gap-6 p-6 border-b border-gray-200">
+              {/* Smaller Movie Poster */}
+              <div className="flex-shrink-0">
+                <div className="w-32 h-48 bg-gradient-to-br from-violet-50 via-gray-50 to-indigo-50 rounded-xl overflow-hidden shadow-lg">
+                  {getPosterUrl() ? (
+                    <img
+                      src={getPosterUrl()}
+                      alt={movie.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <VideoIcon className="w-12 h-12 text-violet-300" />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Movie Info */}
-              <div className="space-y-4">
-                <Dialog.Title className="text-2xl font-bold text-gray-900">
-                  {movie.title}
-                </Dialog.Title>
+              {/* Movie Metadata */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <Dialog.Title className="text-2xl font-bold text-gray-900 mb-2">
+                    {movie.title}
+                  </Dialog.Title>
 
-                {movie.description && (
-                  <Dialog.Description className="text-gray-600 leading-relaxed">
-                    {movie.description}
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    {getReleaseYear() && (
+                      <div className="flex items-center gap-1">
+                        <CalendarIcon className="w-4 h-4" />
+                        {getReleaseYear()}
+                      </div>
+                    )}
+
+                    {getRating() && (
+                      <div className="flex items-center gap-1">
+                        <StarFilledIcon className="w-4 h-4 text-amber-500" />
+                        {getRating()?.toFixed(1)}
+                      </div>
+                    )}
+
+                    {movie.runtime && (
+                      <div className="flex items-center gap-1">
+                        <ClockIcon className="w-4 h-4" />
+                        {movie.runtime} min
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {getGenres().length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {getGenres().map((genre, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-violet-100 text-violet-700 text-sm rounded-full font-medium"
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {getDescription() && (
+                  <Dialog.Description className="text-gray-700 leading-relaxed text-sm">
+                    {getDescription()}
                   </Dialog.Description>
+                )}
+
+                {movie.director && (
+                  <div className="text-sm">
+                    <span className="font-semibold text-gray-900">Regisseur: </span>
+                    <span className="text-gray-700">{movie.director}</span>
+                  </div>
+                )}
+
+                {movie.cast && movie.cast.length > 0 && (
+                  <div className="text-sm">
+                    <span className="font-semibold text-gray-900">Cast: </span>
+                    <span className="text-gray-700">{movie.cast.slice(0, 3).join(', ')}</span>
+                    {movie.cast.length > 3 && <span className="text-gray-500"> en anderen</span>}
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Recommendations Section */}
-            <div className="px-6 pb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Meer zoals dit</h3>
+            {/* Recommendations Carousel */}
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">Meer zoals dit</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => scrollCarousel('left')}
+                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                    disabled={scrollPosition <= 0}
+                  >
+                    <ChevronLeftIcon className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => scrollCarousel('right')}
+                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                  >
+                    <ChevronRightIcon className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+              </div>
 
               {loadingRecommendations ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="inline-block animate-spin w-6 h-6 border-2 border-violet-200 border-t-violet-500 rounded-full"></div>
-                  <span className="ml-2 text-gray-500">Aanbevelingen laden...</span>
+                <div className="flex items-center justify-center py-12">
+                  <div className="inline-block animate-spin w-8 h-8 border-2 border-violet-200 border-t-violet-500 rounded-full"></div>
+                  <span className="ml-3 text-gray-600 font-medium">Aanbevelingen laden...</span>
                 </div>
               ) : recommendations.length > 0 ? (
-                <div className="flex gap-4 overflow-x-auto pb-2">
+                <div
+                  id="recommendations-carousel"
+                  className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
                   {recommendations.map((rec) => (
                     <RecommendationCard key={rec.id} movie={rec} />
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-8">Geen aanbevelingen beschikbaar</p>
+                <div className="text-center py-12">
+                  <VideoIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">Geen aanbevelingen beschikbaar</p>
+                </div>
               )}
             </div>
           </div>
@@ -144,27 +294,49 @@ interface RecommendationCardProps {
 }
 
 const RecommendationCard: React.FC<RecommendationCardProps> = ({ movie }) => {
+  const getPosterUrl = () => {
+    return movie.image || movie.poster_path || movie.posterUrl
+  }
+
+  const getRating = () => {
+    return movie.voteAverage || movie.vote_average
+  }
+
   return (
     <Card
       variant="default"
       padding="none"
-      className="flex-shrink-0 w-32 cursor-pointer hover:shadow-lg transition-all duration-200"
+      className={cn(
+        'flex-shrink-0 w-36 cursor-pointer transition-all duration-300 group',
+        'hover:shadow-xl hover:-translate-y-1 hover:scale-105',
+        'rounded-xl overflow-hidden',
+      )}
     >
-      <div className="aspect-[2/3] bg-gray-100">
-        {movie.image || movie.poster_path ? (
+      <div className="aspect-[3/4] bg-gradient-to-br from-violet-50 via-gray-50 to-indigo-50">
+        {getPosterUrl() ? (
           <img
-            src={movie.image || movie.poster_path}
+            src={getPosterUrl()}
             alt={movie.title}
-            className="w-full h-full object-cover rounded-t-lg"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-2xl rounded-t-lg">
-            🎬
+          <div className="w-full h-full flex items-center justify-center">
+            <VideoIcon className="w-8 h-8 text-violet-300" />
+          </div>
+        )}
+
+        {getRating() && (
+          <div className="absolute top-2 right-2 bg-black/70 text-white px-1.5 py-0.5 rounded-md text-xs font-medium backdrop-blur-sm flex items-center gap-0.5">
+            <StarFilledIcon className="w-2.5 h-2.5 text-amber-400" />
+            {getRating()?.toFixed(1)}
           </div>
         )}
       </div>
-      <div className="p-2">
-        <h4 className="text-xs font-medium text-gray-900 line-clamp-2">{movie.title}</h4>
+
+      <div className="p-3">
+        <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-violet-600 transition-colors">
+          {movie.title}
+        </h4>
       </div>
     </Card>
   )
