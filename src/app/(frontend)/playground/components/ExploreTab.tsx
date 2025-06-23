@@ -8,7 +8,7 @@ import {
   StarFilledIcon,
   CalendarIcon,
 } from '@radix-ui/react-icons'
-import { cn } from '../utils/cn'
+import { classNames } from '../utils/cn'
 import Card from './ui/Card'
 import ResultModal from './ResultModal'
 
@@ -388,7 +388,7 @@ const ExploreTab: React.FC<ExploreTabProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn('w-full space-y-8', className)}>
+    <div className={classNames('w-full space-y-8', className)}>
       <p className="text-xs text-center text-gray-400 font-light tracking-wide uppercase">
         Pas je smaak aan en ontdek films die perfect bij je passen
       </p>
@@ -434,7 +434,7 @@ const ExploreTab: React.FC<ExploreTabProps> = ({ className }) => {
               <button
                 key={genre}
                 onClick={() => toggleGenre(genre)}
-                className={cn(
+                className={classNames(
                   'px-3 py-1 rounded-full text-sm font-medium transition-colors',
                   selectedGenres.includes(genre)
                     ? 'bg-violet-500 text-white'

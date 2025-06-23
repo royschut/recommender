@@ -2,7 +2,7 @@
 
 import React from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
-import { cn } from '../../utils/cn'
+import { classNames } from '../../utils/cn'
 
 interface TabTriggerProps {
   value: string
@@ -14,7 +14,7 @@ interface TabTriggerProps {
 const TabTrigger: React.FC<TabTriggerProps> = ({ value, icon, children, className }) => {
   return (
     <Tabs.Trigger
-      className={cn(
+      className={classNames(
         'relative flex items-center gap-3 px-8 py-4 bg-transparent border-none',
         'text-gray-500 text-base font-medium cursor-pointer transition-all duration-300',
         'hover:text-gray-700 hover:-translate-y-0.5',

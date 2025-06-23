@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { cn } from '../../utils/cn'
+import { classNames } from '../../utils/cn'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   variant?: 'default' | 'search'
@@ -26,7 +26,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <input
         ref={ref}
-        className={cn(baseClasses, variants[variant], errorClasses, widthClasses, className)}
+        className={classNames(
+          baseClasses,
+          variants[variant],
+          errorClasses,
+          widthClasses,
+          className,
+        )}
         {...props}
       />
     )

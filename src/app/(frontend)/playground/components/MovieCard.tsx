@@ -1,5 +1,5 @@
 import { CalendarIcon, InfoCircledIcon, StarFilledIcon, VideoIcon } from '@radix-ui/react-icons'
-import { cn } from '../utils/cn'
+import { classNames } from '../utils/cn'
 import { Card } from './ui'
 
 export type Movie = {
@@ -62,7 +62,7 @@ const MovieCard: React.FC<Props> = ({ movie, onClick, isDummy = false }) => {
     <Card
       variant="default"
       padding="none"
-      className={cn(
+      className={classNames(
         'overflow-hidden cursor-pointer transition-transform duration-200 ease-out group',
         'hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01]',
         'rounded-2xl border-0 bg-white shadow-sm',

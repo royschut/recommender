@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { CheckCircledIcon, Cross2Icon, InfoCircledIcon } from '@radix-ui/react-icons'
-import { cn } from '../../utils/cn'
+import { classNames } from '../../utils/cn'
 
 interface SnackbarProps {
   open: boolean
@@ -55,7 +55,7 @@ const Snackbar: React.FC<SnackbarProps> = ({
 
   return (
     <div
-      className={cn(
+      className={classNames(
         'fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50',
         'max-w-md px-4 py-3 rounded-xl shadow-lg',
         'flex items-center gap-3',

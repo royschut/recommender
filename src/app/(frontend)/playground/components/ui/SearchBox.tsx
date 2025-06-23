@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons'
-import { cn } from '../../utils/cn'
+import { classNames } from '../../utils/cn'
 import Input from './Input'
 
 interface SearchBoxProps {
@@ -30,7 +30,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className={cn('relative', className)}>
+    <form onSubmit={handleSubmit} className={classNames('relative', className)}>
       <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-10 pointer-events-none" />
       <Input
         variant="search"

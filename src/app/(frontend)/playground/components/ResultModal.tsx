@@ -11,7 +11,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@radix-ui/react-icons'
-import { cn } from '../utils/cn'
+import { classNames } from '../utils/cn'
 import Card from './ui/Card'
 import Snackbar from './ui/Snackbar'
 
@@ -156,7 +156,7 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in z-40" />
         <Dialog.Content
-          className={cn(
+          className={classNames(
             'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2',
             'w-full max-w-4xl max-h-[90vh] overflow-y-auto',
             'bg-white rounded-2xl shadow-2xl z-50',
@@ -166,7 +166,7 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
           <div className="relative">
             {/* Close Button */}
             <Dialog.Close
-              className={cn(
+              className={classNames(
                 'absolute top-4 right-4 z-10',
                 'w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm',
                 'flex items-center justify-center text-gray-700',
@@ -342,7 +342,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ movie, onClick 
     <Card
       variant="default"
       padding="none"
-      className={cn(
+      className={classNames(
         'flex-shrink-0 w-36 cursor-pointer transition-all duration-300 group',
         'hover:shadow-xl hover:-translate-y-1 hover:scale-105',
         'rounded-xl overflow-hidden',

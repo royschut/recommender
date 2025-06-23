@@ -1,18 +1,15 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   MagnifyingGlassIcon,
-  StarFilledIcon,
-  CalendarIcon,
   VideoIcon,
   ReloadIcon,
   ExclamationTriangleIcon,
-  InfoCircledIcon,
 } from '@radix-ui/react-icons'
 import PlaygroundLayout from '../layout/PlaygroundLayout'
-import { cn } from '../utils/cn'
-import Card from '../components/ui/Card'
+import { classNames } from '../utils/cn'
 import Snackbar from '../components/ui/Snackbar'
 import ResultModal from '../components/ResultModal'
 import MovieCard, { Movie, SkeletonCard } from '../components/MovieCard'
@@ -22,58 +19,51 @@ interface Props {
 }
 
 const SmartSearchPage: React.FC<Props> = ({ className }) => {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Movie[]>([])
-  const [loading, setLoading] = useState(false)
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
-  const [showSearchSnackbar, setShowSearchSnackbar] = useState(false)
-  const [hasShownSearchSnackbar, setHasShownSearchSnackbar] = useState(false)
-
-  const debouncedSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      setResults([])
-      return
-    }
-
-    setLoading(true)
-    try {
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const searchQuery = useQuery({
+    queryKey: ['searchQuery', debouncedQuery],
+    queryFn: async () => {
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify({ query: debouncedQuery }),
       })
 
       if (response.ok) {
         const data = await response.json()
-        setResults(data.results || [])
 
         // Show snackbar only for the first search
+        // @todo
         if (data.results?.length > 0 && !hasShownSearchSnackbar) {
           setShowSearchSnackbar(true)
           setHasShownSearchSnackbar(true)
         }
+
+        return data.results || []
       }
-    } catch (error) {
-      console.error('Search error:', error)
-      setResults([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    },
+    enabled: !!debouncedQuery,
+  })
+
+  const [query, setQuery] = useState('')
+  const results = searchQuery.data || []
+  const loading = searchQuery.isLoading || searchQuery.isFetching
+
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
+  const [showSearchSnackbar, setShowSearchSnackbar] = useState(false)
+  const [hasShownSearchSnackbar, setHasShownSearchSnackbar] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      debouncedSearch(query)
-    }, 500)
+    const timer = setTimeout(() => setDebouncedQuery(query), 500)
 
     return () => clearTimeout(timer)
-  }, [query, debouncedSearch])
+  }, [query])
 
   const displayResults = results.length > 0 ? results : []
 
   return (
     <PlaygroundLayout activeTab="smart-search">
-      <div className={cn('w-full space-y-12', className)}>
+      <div className={classNames('w-full space-y-12', className)}>
         <p className="text-xs text-center text-gray-400 mt-4 font-light tracking-wide uppercase">
           {'Ontdek, verken en experimenteer met aanbevelingen'}
         </p>
@@ -86,7 +76,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
             placeholder="Zoek op gevoel, niet op exacte woorden..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className={cn(
+            className={classNames(
               'w-full pl-16 pr-8 py-4 text-lg text-gray-900',
               'bg-white/90 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl shadow-lg',
               'focus:border-violet-400 focus:ring-0 focus:outline-none',

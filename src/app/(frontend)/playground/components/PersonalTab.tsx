@@ -9,7 +9,7 @@ import {
   StarFilledIcon,
   CalendarIcon,
 } from '@radix-ui/react-icons'
-import { cn } from '../utils/cn'
+import { classNames } from '../utils/cn'
 import Card from './ui/Card'
 import Button from './ui/Button'
 import ResultModal from './ResultModal'
@@ -169,7 +169,7 @@ const PersonalTab: React.FC<PersonalTabProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn('w-full space-y-12', className)}>
+    <div className={classNames('w-full space-y-12', className)}>
       <p className="text-xs text-center text-gray-400 mt-4 font-light tracking-wide uppercase">
         Bouw je persoonlijke smaakprofiel en ontdek perfecte aanbevelingen
       </p>
@@ -441,7 +441,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, compact = false }
     <Card
       variant="default"
       padding="none"
-      className={cn(
+      className={classNames(
         'overflow-hidden cursor-pointer transition-all duration-200 ease-out group',
         'hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01]',
         'rounded-2xl border-0 bg-white shadow-sm',

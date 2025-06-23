@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { cn } from '../../utils/cn'
+import { classNames } from '../../utils/cn'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline'
@@ -35,7 +35,10 @@ const Button: React.FC<ButtonProps> = ({
   }
 
   return (
-    <button className={cn(baseClasses, variants[variant], sizes[size], className)} {...props}>
+    <button
+      className={classNames(baseClasses, variants[variant], sizes[size], className)}
+      {...props}
+    >
       {children}
     </button>
   )

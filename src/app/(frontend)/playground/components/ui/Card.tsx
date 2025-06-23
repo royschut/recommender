@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { cn } from '../../utils/cn'
+import { classNames } from '../../utils/cn'
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'outline' | 'soft'
@@ -34,7 +34,7 @@ const Card: React.FC<CardProps> = ({
 
   return (
     <div
-      className={cn(baseClasses, variants[variant], paddingClasses[padding], className)}
+      className={classNames(baseClasses, variants[variant], paddingClasses[padding], className)}
       {...props}
     >
       {children}

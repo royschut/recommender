@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { cn } from '../../utils/cn'
+import { classNames } from '../../utils/cn'
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error'
@@ -33,7 +33,7 @@ const Badge: React.FC<BadgeProps> = ({
   }
 
   return (
-    <span className={cn(baseClasses, variants[variant], sizes[size], className)} {...props}>
+    <span className={classNames(baseClasses, variants[variant], sizes[size], className)} {...props}>
       {children}
     </span>
   )
