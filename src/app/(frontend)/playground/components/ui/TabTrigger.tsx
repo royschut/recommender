@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Tabs } from 'radix-ui'
+import * as Tabs from '@radix-ui/react-tabs'
 import { cn } from '../../utils/cn'
 
 interface TabTriggerProps {

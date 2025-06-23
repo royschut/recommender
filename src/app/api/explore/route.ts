@@ -429,3 +429,312 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const {
+      conceptWeights = {},
+      yearMin = 0,
+      yearMax = 0,
+      scoreMin = 0,
+      scoreMax = 0,
+      selectedGenres = [],
+      limit = 12,
+      page = 1,
+      offset = 0,
+    } = body
+
+    console.log('🎛️ Explore POST request:', {
+      conceptWeights,
+      yearMin,
+      yearMax,
+      scoreMin,
+      scoreMax,
+      selectedGenres,
+      limit,
+      page,
+      offset,
+    })
+
+    const collectionName = 'movie-embeddings'
+
+    // Check if any concept weights are active (non-zero)
+    const hasActiveWeights = Object.values(conceptWeights).some((weight: any) => weight !== 0)
+
+    if (!hasActiveWeights) {
+      // No concept weights active - return paginated filtered random popular films
+      console.log('🎲 No active concept weights, returning paginated random popular films...')
+
+      const payloadConfig = await config
+      const payload = await getPayload({ config: payloadConfig })
+
+      // Build Payload filters for pre-filtering
+      const whereConditions: any = {
+        hasEmbedding: {
+          equals: true, // Only get movies that have embeddings in Qdrant
+        },
+      }
+
+      // Add year filter if specified
+      if (yearMin > 0 || yearMax > 0) {
+        whereConditions.releaseDate = {}
+        if (yearMin > 0) {
+          whereConditions.releaseDate.greater_than_equal = `${yearMin}-01-01`
+        }
+        if (yearMax > 0) {
+          whereConditions.releaseDate.less_than_equal = `${yearMax}-12-31`
+        }
+      }
+
+      // Add score filter if specified
+      if (scoreMin > 0 || scoreMax > 0) {
+        whereConditions.voteAverage = {}
+        if (scoreMin > 0) {
+          whereConditions.voteAverage.greater_than_equal = scoreMin
+        }
+        if (scoreMax > 0) {
+          whereConditions.voteAverage.less_than_equal = scoreMax
+        }
+      }
+
+      // Add genre filter if specified
+      if (selectedGenres.length > 0) {
+        whereConditions['genres.genre'] = {
+          in: selectedGenres,
+        }
+      }
+
+      // Get total count first
+      const totalCount = await payload.count({
+        collection: 'movies',
+        where: whereConditions,
+      })
+
+      // Calculate pagination
+      const currentOffset = offset || (page - 1) * limit
+
+      // Get paginated results
+      const filteredMovies = await payload.find({
+        collection: 'movies',
+        where: whereConditions,
+        limit,
+        page: page || undefined,
+        sort: '-voteAverage', // Sort by rating for consistent pagination
+      })
+
+      console.log(
+        `✅ Found ${filteredMovies.docs.length} films (page ${page}, total: ${totalCount.totalDocs})`,
+      )
+
+      return NextResponse.json({
+        success: true,
+        results: filteredMovies.docs,
+        totalFound: totalCount.totalDocs,
+        totalPages: Math.ceil(totalCount.totalDocs / limit),
+        currentPage: page,
+        hasNextPage: page * limit < totalCount.totalDocs,
+        hasPrevPage: page > 1,
+        method: 'paginated_random',
+        conceptWeights,
+        filters: { yearMin, yearMax, scoreMin, scoreMax, selectedGenres },
+      })
+    }
+
+    // Load concept vectors from Qdrant
+    const conceptVectors = await loadConceptVectors()
+
+    if (Object.keys(conceptVectors).length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Concept vectors not available',
+        },
+        { status: 500 },
+      )
+    }
+
+    // Create target vector based on concept weights
+    const targetVector = createTargetVectorFromConcepts(conceptWeights, conceptVectors)
+
+    if (!targetVector) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Could not create target vector from concept weights',
+        },
+        { status: 400 },
+      )
+    }
+
+    // Pre-filter movies using Payload if filters are applied
+    let preFilteredMovieIds: string[] | null = null
+
+    if (yearMin > 0 || yearMax > 0 || scoreMin > 0 || scoreMax > 0 || selectedGenres.length > 0) {
+      console.log('🔍 Pre-filtering movies based on criteria...')
+
+      const payloadConfig = await config
+      const payload = await getPayload({ config: payloadConfig })
+
+      const whereConditions: any = {
+        hasEmbedding: {
+          equals: true,
+        },
+      }
+
+      // Add year filter if specified
+      if (yearMin > 0 || yearMax > 0) {
+        whereConditions.releaseDate = {}
+        if (yearMin > 0) {
+          whereConditions.releaseDate.greater_than_equal = `${yearMin}-01-01`
+        }
+        if (yearMax > 0) {
+          whereConditions.releaseDate.less_than_equal = `${yearMax}-12-31`
+        }
+      }
+
+      // Add score filter if specified
+      if (scoreMin > 0 || scoreMax > 0) {
+        whereConditions.voteAverage = {}
+        if (scoreMin > 0) {
+          whereConditions.voteAverage.greater_than_equal = scoreMin
+        }
+        if (scoreMax > 0) {
+          whereConditions.voteAverage.less_than_equal = scoreMax
+        }
+      }
+
+      // Add genre filter if specified
+      if (selectedGenres.length > 0) {
+        whereConditions['genres.genre'] = {
+          in: selectedGenres,
+        }
+      }
+
+      const filteredMovies = await payload.find({
+        collection: 'movies',
+        where: whereConditions,
+        limit: 0,
+      })
+
+      preFilteredMovieIds = filteredMovies.docs.map((movie: any) => String(movie.id))
+
+      if (preFilteredMovieIds.length === 0) {
+        return NextResponse.json({
+          success: true,
+          results: [],
+          totalFound: 0,
+          totalPages: 0,
+          currentPage: page,
+          hasNextPage: false,
+          hasPrevPage: false,
+          method: 'concept_based_search_filtered',
+          conceptWeights,
+          filters: { yearMin, yearMax, scoreMin, scoreMax, selectedGenres },
+        })
+      }
+
+      console.log(`🔍 Pre-filter reduced search space to ${preFilteredMovieIds.length} movies`)
+    }
+
+    // Use regular search with the target vector, get more results for pagination
+    const searchLimit = Math.min(limit * 10, 100) // Get more results to enable pagination
+    const currentOffset = offset || (page - 1) * limit
+
+    const searchResults = await qdrant.search(collectionName, {
+      vector: targetVector,
+      limit: searchLimit,
+      offset: currentOffset,
+      with_payload: true,
+      filter: preFilteredMovieIds
+        ? {
+            must: [
+              {
+                key: 'movieId',
+                match: {
+                  any: preFilteredMovieIds,
+                },
+              },
+            ],
+          }
+        : undefined,
+    })
+
+    if (!searchResults || searchResults.length === 0) {
+      return NextResponse.json({
+        success: true,
+        results: [],
+        totalFound: 0,
+        totalPages: 0,
+        currentPage: page,
+        hasNextPage: false,
+        hasPrevPage: false,
+        method: 'concept_based_search',
+        conceptWeights,
+        filters: { yearMin, yearMax, scoreMin, scoreMax, selectedGenres },
+      })
+    }
+
+    // Get movie IDs from search results
+    const movieIds = searchResults.map((result: any) => result.payload?.movieId).filter(Boolean)
+
+    // Fetch full movie details from Payload
+    const payloadConfig = await config
+    const payload = await getPayload({ config: payloadConfig })
+
+    const movies = await payload.find({
+      collection: 'movies',
+      where: {
+        id: {
+          in: movieIds,
+        },
+      },
+      limit: movieIds.length,
+    })
+
+    // Sort movies by their similarity score and paginate
+    const sortedMovies = movieIds
+      .map((movieId: string) => {
+        const movie = movies.docs.find((m) => String(m.id) === movieId)
+        const searchResult = searchResults.find((r) => r.payload?.movieId === movieId)
+        return {
+          ...movie,
+          similarityScore: searchResult?.score || 0,
+        }
+      })
+      .filter(Boolean)
+      .slice(0, limit) // Apply limit for this page
+
+    // Estimate total results (this is approximate for concept-based search)
+    const estimatedTotal = Math.min(searchResults.length * 2, 1000)
+    const totalPages = Math.ceil(estimatedTotal / limit)
+
+    console.log(`✅ Found ${sortedMovies.length} films using concept-based search (page ${page})`)
+
+    return NextResponse.json({
+      success: true,
+      results: sortedMovies,
+      totalFound: estimatedTotal,
+      totalPages,
+      currentPage: page,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+      method: 'concept_based_search',
+      conceptWeights,
+      filters: { yearMin, yearMax, scoreMin, scoreMax, selectedGenres },
+      appliedConcepts: Object.entries(conceptWeights)
+        .filter(([_, weight]) => weight !== 0)
+        .map(([concept, weight]) => ({ concept, weight })),
+    })
+  } catch (error: any) {
+    console.error('❌ Explore POST API error:', error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Er is een fout opgetreden bij het exploreren',
+        details: error.message,
+      },
+      { status: 500 },
+    )
+  }
+}

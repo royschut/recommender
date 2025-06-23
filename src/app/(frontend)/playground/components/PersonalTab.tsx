@@ -43,42 +43,14 @@ const PersonalTab: React.FC<PersonalTabProps> = ({ className }) => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [exploreItems, setExploreItems] = useState<Movie[]>([])
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const [loadingExplore, setLoadingExplore] = useState(false)
 
   // Fetch initial favorites (3 random items)
   useEffect(() => {
     const fetchInitialFavorites = async () => {
       setLoadingFavorites(true)
-
-      // Always start with mock data for reliable favorites
-      const mockFavorites = [
-        {
-          id: 'fav-1',
-          title: 'Inception',
-          image: '/api/placeholder/300/450',
-          voteAverage: 8.8,
-          releaseDate: '2010-07-16',
-          genres: ['Sci-Fi', 'Thriller'],
-          overview: 'A mind-bending thriller about dream manipulation',
-        },
-        {
-          id: 'fav-2',
-          title: 'The Dark Knight',
-          image: '/api/placeholder/300/450',
-          voteAverage: 9.0,
-          releaseDate: '2008-07-18',
-          genres: ['Action', 'Crime'],
-          overview: 'Batman faces his greatest challenge yet',
-        },
-        {
-          id: 'fav-3',
-          title: 'Interstellar',
-          image: '/api/placeholder/300/450',
-          voteAverage: 8.6,
-          releaseDate: '2014-11-07',
-          genres: ['Sci-Fi', 'Drama'],
-          overview: 'A journey through space and time to save humanity',
-        },
-      ]
 
       try {
         const response = await fetch('/api/explore', {
@@ -89,13 +61,14 @@ const PersonalTab: React.FC<PersonalTabProps> = ({ className }) => {
 
         if (response.ok) {
           const data = await response.json()
-          setFavorites(data.results?.slice(0, 3) || mockFavorites)
+          setFavorites(data.results?.slice(0, 3) || [])
         } else {
-          setFavorites(mockFavorites)
+          console.error('Failed to fetch initial favorites:', response.statusText)
+          setFavorites([])
         }
       } catch (error) {
         console.error('Failed to fetch initial favorites:', error)
-        setFavorites(mockFavorites)
+        setFavorites([])
       } finally {
         setLoadingFavorites(false)
       }
@@ -111,63 +84,23 @@ const PersonalTab: React.FC<PersonalTabProps> = ({ className }) => {
     const fetchRecommendations = async () => {
       setLoadingRecommendations(true)
 
-      // Mock recommendations that always work
-      const mockRecommendations = Array.from({ length: 12 }, (_, i) => ({
-        id: `rec-${i + 1}`,
-        title:
-          [
-            'Blade Runner 2049',
-            'Dune',
-            'The Matrix',
-            'Mad Max: Fury Road',
-            'Ex Machina',
-            'Arrival',
-            'Prisoners',
-            'Sicario',
-            'The Prestige',
-            'Memento',
-            'Tenet',
-            'Dunkirk',
-          ][i] || `Recommended Movie ${i + 1}`,
-        image: '/api/placeholder/300/450',
-        voteAverage: 7 + Math.random() * 2,
-        releaseDate: `${2020 + Math.floor(Math.random() * 4)}-01-01`,
-        genres: [
-          ['Sci-Fi', 'Thriller'],
-          ['Adventure', 'Sci-Fi'],
-          ['Action', 'Sci-Fi'],
-          ['Action', 'Adventure'],
-          ['Sci-Fi', 'Drama'],
-          ['Drama', 'Sci-Fi'],
-          ['Crime', 'Drama'],
-          ['Action', 'Crime'],
-          ['Mystery', 'Drama'],
-          ['Mystery', 'Thriller'],
-          ['Action', 'Thriller'],
-          ['War', 'Drama'],
-        ][i] || ['Drama', 'Action'],
-        overview: 'Een film die perfect past bij jouw smaak',
-      }))
-
       try {
-        const response = await fetch('/api/personal-recommendations', {
+        const response = await fetch('/api/explore', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            favoriteIds: favorites.map((f) => f.id),
-            limit: 12,
-          }),
+          body: JSON.stringify({ limit: 12, page: 2 }), // Get a different page for variety
         })
 
         if (response.ok) {
           const data = await response.json()
-          setRecommendations(data.recommendations || mockRecommendations)
+          setRecommendations(data.results || [])
         } else {
-          setRecommendations(mockRecommendations)
+          console.error('Failed to fetch recommendations:', response.statusText)
+          setRecommendations([])
         }
       } catch (error) {
         console.error('Failed to fetch recommendations:', error)
-        setRecommendations(mockRecommendations)
+        setRecommendations([])
       } finally {
         setLoadingRecommendations(false)
       }
@@ -176,32 +109,51 @@ const PersonalTab: React.FC<PersonalTabProps> = ({ className }) => {
     fetchRecommendations()
   }, [favorites])
 
-  const handleAddFavorite = async () => {
-    setShowAddModal(true)
+  const loadExploreItems = async (page = 1) => {
+    if (page === 1) {
+      setShowAddModal(true)
+      setCurrentPage(1)
+    }
+
+    setLoadingExplore(true)
+
     try {
       const response = await fetch('/api/explore', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ limit: 20 }),
+        body: JSON.stringify({ limit: 20, page }),
       })
 
       if (response.ok) {
         const data = await response.json()
         setExploreItems(data.results || [])
+        setTotalPages(data.totalPages || 1)
+        setCurrentPage(page)
+      } else {
+        console.error('Failed to fetch explore items:', response.statusText)
+        setExploreItems([])
       }
     } catch (error) {
       console.error('Failed to fetch explore items:', error)
-      // Mock data fallback
-      setExploreItems(
-        Array.from({ length: 20 }, (_, i) => ({
-          id: `explore-${i + 1}`,
-          title: `Explore Movie ${i + 1}`,
-          image: '/api/placeholder/300/450',
-          voteAverage: 6 + Math.random() * 3,
-          releaseDate: `${2018 + Math.floor(Math.random() * 6)}-01-01`,
-          genres: ['Comedy', 'Romance'],
-        })),
-      )
+      setExploreItems([])
+    } finally {
+      setLoadingExplore(false)
+    }
+  }
+
+  const handleAddFavorite = () => {
+    loadExploreItems(1)
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      loadExploreItems(currentPage + 1)
+    }
+  }
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      loadExploreItems(currentPage - 1)
     }
   }
 
@@ -229,10 +181,13 @@ const PersonalTab: React.FC<PersonalTabProps> = ({ className }) => {
             <HeartIcon className="w-6 h-6 text-red-500" />
             Mijn Favorieten
           </h2>
-          <Button variant="outline" onClick={handleAddFavorite} className="flex items-center gap-2">
+          <button
+            onClick={handleAddFavorite}
+            className="flex items-center gap-2 px-4 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
+          >
             <PlusIcon className="w-4 h-4" />
             Voeg toe
-          </Button>
+          </button>
         </div>
 
         {/* Favorites Carousel */}
@@ -283,10 +238,15 @@ const PersonalTab: React.FC<PersonalTabProps> = ({ className }) => {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowAddModal(false)}
           />
-          <div className="relative w-[95vw] max-w-6xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl">
+          <div className="relative w-[95vw] max-w-6xl max-h-[90vh] overflow-hidden bg-white rounded-2xl shadow-2xl">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Voeg favorieten toe</h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Voeg favorieten toe</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Pagina {currentPage} van {totalPages}
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowAddModal(false)}
                   className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
@@ -295,16 +255,79 @@ const PersonalTab: React.FC<PersonalTabProps> = ({ className }) => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {exploreItems.map((movie) => (
-                  <MovieCard
-                    key={movie.id}
-                    movie={movie}
-                    onClick={() => addToFavorites(movie)}
-                    compact
-                  />
-                ))}
+              {/* Movie Grid */}
+              <div className="min-h-[400px] max-h-[60vh] overflow-y-auto">
+                {loadingExplore ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {Array.from({ length: 20 }, (_, i) => (
+                      <MovieCardSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : exploreItems.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {exploreItems.map((movie) => (
+                      <MovieCard
+                        key={movie.id}
+                        movie={movie}
+                        onClick={() => addToFavorites(movie)}
+                        compact
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-center">
+                      <VideoIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">Geen films gevonden</p>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1 || loadingExplore}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ← Vorige
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {/* Page numbers */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const startPage = Math.max(1, currentPage - 2)
+                      const pageNumber = startPage + i
+                      if (pageNumber > totalPages) return null
+
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => loadExploreItems(pageNumber)}
+                          disabled={loadingExplore}
+                          className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
+                            pageNumber === currentPage
+                              ? 'bg-violet-500 text-white'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          {pageNumber}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages || loadingExplore}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Volgende →
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
