@@ -87,7 +87,7 @@ const MovieCard: React.FC<Props> = ({ movie, onClick, isDummy = false }) => {
         )}
 
         {getMatchScore() && (
-          <div className="absolute top-3 right-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-2 py-1 rounded-lg text-xs font-semibold shadow-lg backdrop-blur-sm flex items-center gap-1 border border-white/20">
+          <div className="absolute top-3 right-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white px-2 py-1 rounded-lg text-xs font-semibold shadow-lg backdrop-blur-sm flex items-center gap-1 border border-white/20 opacity-90">
             <InfoCircledIcon className="w-3 h-3" />
             MATCH {Math.round((getMatchScore() || 0) * 100)}%
           </div>

@@ -11,6 +11,7 @@ export default {
         // Pastel violet primary palette
         violet: {
           50: '#F9FAFB', // Light background
+          75: '#f0effa', // Slightly darker light violet
           100: '#F3F4F6', // Card backgrounds
           200: '#E5E7EB', // Borders
           300: '#D1D5DB', // Muted elements
