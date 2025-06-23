@@ -83,6 +83,13 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
     },
   ]
 
+  const suggestions = useQuery({
+    queryKey: ['suggestions'],
+    queryFn: async () => {
+      return fetch('/api/explore?limit=12').then((res) => res.json())
+    },
+  })
+
   const searchQuery = useQuery({
     queryKey: ['searchQuery', debouncedQuery],
     queryFn: async () => {
@@ -109,8 +116,8 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
   })
 
   const [query, setQuery] = useState('')
-  const results: Movie[] = searchQuery.data || []
-  const loading = searchQuery.isLoading || searchQuery.isFetching
+  const results: Movie[] = query ? searchQuery.data || [] : suggestions.data?.results || []
+  const loading = query ? searchQuery.isLoading || searchQuery.isFetching : suggestions.isLoading
 
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
   const [showSearchSnackbar, setShowSearchSnackbar] = useState(false)
