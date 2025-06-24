@@ -116,9 +116,6 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
   })
 
   const [query, setQuery] = useState('')
-  const results: Movie[] = query ? searchQuery.data || [] : suggestions.data?.results || []
-  const loading = query ? searchQuery.isLoading || searchQuery.isFetching : suggestions.isLoading
-
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
   const [showSearchSnackbar, setShowSearchSnackbar] = useState(false)
   const [hasShownSearchSnackbar, setHasShownSearchSnackbar] = useState(false)
@@ -145,24 +142,21 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
   return (
     <PlaygroundLayout activeTab="smart-search">
       <div className={classNames('w-full space-y-12', className)}>
+        {/* // Search input */}
         <section
           className={`space-y-6 transition-all duration-700 ease-out ${
             visibleSections.includes(0) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          {/* Search */}
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-600 mb-1">
-              Search stories by feeling, not just words
-            </h2>
+            <h2 className="text-2xl font-semibold text-gray-600 mb-1">Find media semantically</h2>
           </div>
 
-          {/* Search Input */}
           <div className="relative max-w-3xl mx-auto">
             <MagnifyingGlassIcon className="absolute left-6 top-1/2 transform -translate-y-1/2 w-6 h-6 text-violet-400" />
             <input
               type="text"
-              placeholder="Search by meaning..."
+              placeholder="Search stories by feelings, not just words..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className={classNames(
@@ -176,12 +170,94 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
           </div>
         </section>
 
+        {/* Suggestions */}
+        {!searchQuery.isLoading && !searchQuery.data && (
+          <section
+            className={`space-y-6 transition-all duration-700 ease-out ${
+              visibleSections.includes(1) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+          >
+            {/* Toggle for taste-based search */}
+            {/* <div className="flex justify-center mb-6">
+              <Button
+                variant="ghost"
+                size="2"
+                onClick={() => setShowAllSliders(!showAllSliders)}
+                className={classNames(
+                  'flex items-center gap-3 cursor-pointer text-base font-medium',
+                  'text-violet-500 hover:text-violet-600',
+                  'hover:bg-violet-50 transition-colors duration-200',
+                )}
+              >
+                <LayersIcon className="w-5 h-5 text-violet-500" />
+                {showAllSliders ? 'Hide taste options' : 'Tweak your taste'}
+              </Button>
+            </div> */}
+
+            <div className="text-center">
+              <h2 className="text-xl font-light text-gray-600 mb-1">Or explore by surprise</h2>
+            </div>
+            {suggestions.isLoading ? (
+              <div className="space-y-8">
+                <div className="text-center pt-4 pb-6">
+                  <ReloadIcon className="inline-block animate-spin w-8 h-8 text-violet-500 mb-4" />
+                  <p className="text-gray-600 text-lg font-medium flex items-center justify-center gap-2">
+                    <MagnifyingGlassIcon className="w-5 h-5" />
+                    Zoeken naar perfecte matches...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 px-6 animate-fade-in">
+                {suggestions.data?.results.map((movie: Movie) => (
+                  <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    onClick={() => setSelectedMovie(movie)}
+                    compact
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Search results */}
         <section
+          className={`space-y-6 transition-all duration-700 ease-out ${
+            visibleSections.includes(2) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+          }`}
+        >
+          {searchQuery.isLoading ? (
+            <div className="space-y-8">
+              <div className="text-center pt-4 pb-6">
+                <ReloadIcon className="inline-block animate-spin w-8 h-8 text-violet-500 mb-4" />
+                <p className="text-gray-600 text-lg font-medium flex items-center justify-center gap-2">
+                  <MagnifyingGlassIcon className="w-5 h-5" />
+                  Zoeken naar perfecte matches...
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 px-6 animate-fade-in">
+              {searchQuery.data?.map((movie: Movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  onClick={() => setSelectedMovie(movie)}
+                  compact
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Explore */}
+        {/* <section
           className={`space-y-6 transition-all duration-700 ease-out ${
             visibleSections.includes(1) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          {/* Explore */}
           <div className="flex justify-center mb-8">
             <div className="w-100 h-px bg-gradient-to-r from-transparent via-violet-200 to-transparent" />
           </div>
@@ -191,11 +267,8 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
               Use the sliders to shape your vibe — or search above
             </p>
           </div>
-
-          {/* Mood Sliders */}
           <div className="max-w-lg mx-auto space-y-6 p-5 bg-violet-50 border border-violet-200 rounded-lg box-shadow-sm">
             <div className="space-y-5">
-              {/* Always visible sliders (first 2) */}
               {sliders.slice(0, 2).map((slider) => (
                 <MoodSlider
                   key={slider.key}
@@ -211,7 +284,6 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                 />
               ))}
 
-              {/* Collapsible additional sliders */}
               <div
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${
                   showAllSliders ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 -mt-2'
@@ -237,7 +309,6 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                 )}
               </div>
 
-              {/* Show more/less button */}
               <div className="flex justify-center pt-3">
                 <Button
                   variant="ghost"
@@ -264,77 +335,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
               </div>
             </div>
           </div>
-        </section>
-
-        <section
-          className={`space-y-6 transition-all duration-700 ease-out ${
-            visibleSections.includes(2) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-        >
-          {/* Suggestions */}
-          <div className="text-center">
-            <h2 className="text-xl font-light text-gray-600 mb-1">Suggestions for you</h2>
-          </div>
-
-          {/* Loading State */}
-          {loading && (
-            <div className="space-y-8">
-              <div className="text-center py-8">
-                <ReloadIcon className="inline-block animate-spin w-8 h-8 text-violet-500 mb-4" />
-                <p className="text-gray-600 text-lg font-medium flex items-center justify-center gap-2">
-                  <MagnifyingGlassIcon className="w-5 h-5" />
-                  Zoeken naar perfecte matches...
-                </p>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 px-6">
-                {Array.from({ length: 8 }, (_, i) => (
-                  <SkeletonCard key={`skeleton-${i}`} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Results Grid */}
-          {!loading && results.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 px-6 animate-fade-in">
-              {results.map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  onClick={() => setSelectedMovie(movie)}
-                  isDummy={false}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loading && !query && (
-            <div className="text-center py-20">
-              <VideoIcon className="w-20 h-20 text-gray-300 mx-auto mb-6" />
-              <p className="text-gray-500 text-lg mb-2 flex items-center justify-center gap-2">
-                <MagnifyingGlassIcon className="w-5 h-5" />
-                Begin met typen om films te zoeken
-              </p>
-            </div>
-          )}
-
-          {/* No Results */}
-          {!loading && query && results.length === 0 && (
-            <div className="text-center py-16">
-              <ExclamationTriangleIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-gray-600 text-xl font-semibold mb-2 flex items-center justify-center gap-2">
-                <MagnifyingGlassIcon className="w-5 h-5" />
-                Geen resultaten gevonden
-              </h3>
-              <p className="text-gray-500 text-lg mb-1">voor "{query}"</p>
-              <p className="text-gray-400 flex items-center justify-center gap-2">
-                <ReloadIcon className="w-4 h-4" />
-                Probeer andere woorden of beschrijvingen
-              </p>
-            </div>
-          )}
-        </section>
+        </section> */}
 
         <ResultModal
           movie={selectedMovie}
@@ -342,7 +343,6 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
           onOpenChange={(open) => !open && setSelectedMovie(null)}
           onMovieChange={(movie) => setSelectedMovie(movie)}
         />
-
         <Snackbar
           open={showSearchSnackbar}
           onOpenChange={setShowSearchSnackbar}

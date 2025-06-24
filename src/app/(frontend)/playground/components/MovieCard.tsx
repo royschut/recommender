@@ -22,10 +22,11 @@ export type Movie = {
 type Props = {
   movie: Movie
   onClick: () => void
-  isDummy?: boolean
+  className?: string
+  compact?: boolean
 }
 
-const MovieCard: React.FC<Props> = ({ movie, onClick, isDummy = false }) => {
+const MovieCard: React.FC<Props> = ({ movie, onClick, className, compact }) => {
   const getPosterUrl = () => {
     return movie.image || movie.poster_path || movie.posterUrl
   }
@@ -66,7 +67,7 @@ const MovieCard: React.FC<Props> = ({ movie, onClick, isDummy = false }) => {
         'overflow-hidden cursor-pointer transition-transform duration-200 ease-out group',
         'hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01]',
         'rounded-2xl border-0 bg-white shadow-sm',
-        isDummy && 'opacity-50 cursor-default hover:transform-none hover:shadow-sm',
+        className,
       )}
       onClick={onClick}
     >
@@ -117,30 +118,34 @@ const MovieCard: React.FC<Props> = ({ movie, onClick, isDummy = false }) => {
           )}
         </div>
 
-        {getGenres().length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {getGenres()
-              .slice(0, 2)
-              .map((genre, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 text-xs rounded-full font-medium border border-violet-200/50 shadow-sm"
-                >
-                  {genre}
-                </span>
-              ))}
-            {getGenres().length > 2 && (
-              <span className="px-2 py-1 bg-gradient-to-r from-gray-100 to-slate-100 text-gray-600 text-xs rounded-full font-medium border border-gray-200/50 shadow-sm">
-                +{getGenres().length - 2}
-              </span>
+        {!compact && (
+          <>
+            {getGenres().length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {getGenres()
+                  .slice(0, 2)
+                  .map((genre, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 text-xs rounded-full font-medium border border-violet-200/50 shadow-sm"
+                    >
+                      {genre}
+                    </span>
+                  ))}
+                {getGenres().length > 2 && (
+                  <span className="px-2 py-1 bg-gradient-to-r from-gray-100 to-slate-100 text-gray-600 text-xs rounded-full font-medium border border-gray-200/50 shadow-sm">
+                    +{getGenres().length - 2}
+                  </span>
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {getDescription() && (
-          <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 font-light">
-            {getDescription()}
-          </p>
+            {getDescription() && (
+              <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 font-light">
+                {getDescription()}
+              </p>
+            )}
+          </>
         )}
       </div>
     </Card>

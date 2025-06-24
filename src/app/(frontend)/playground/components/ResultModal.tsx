@@ -14,6 +14,7 @@ import {
 import { classNames } from '../utils/cn'
 import Card from './ui/Card'
 import Snackbar from './ui/Snackbar'
+import MovieCard from './MovieCard'
 
 interface Movie {
   id: string
@@ -90,15 +91,6 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
         }
       } catch (error) {
         console.error('Recommendations error:', error)
-        // Mock data for demo
-        setRecommendations([
-          { id: '1', title: 'Gerelateerde Film 1', image: '/api/placeholder/300/450' },
-          { id: '2', title: 'Gerelateerde Film 2', image: '/api/placeholder/300/450' },
-          { id: '3', title: 'Gerelateerde Film 3', image: '/api/placeholder/300/450' },
-          { id: '4', title: 'Gerelateerde Film 4', image: '/api/placeholder/300/450' },
-          { id: '5', title: 'Gerelateerde Film 5', image: '/api/placeholder/300/450' },
-          { id: '6', title: 'Gerelateerde Film 6', image: '/api/placeholder/300/450' },
-        ])
       } finally {
         setLoadingRecommendations(false)
       }
@@ -295,10 +287,11 @@ const ResultModal: React.FC<ResultModalProps> = ({ movie, open, onOpenChange, on
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {recommendations.map((rec) => (
-                    <RecommendationCard
+                    <MovieCard
                       key={rec.id}
                       movie={rec}
                       onClick={() => handleMovieChange(rec)}
+                      className="flex-shrink-0 w-50"
                     />
                   ))}
                 </div>
