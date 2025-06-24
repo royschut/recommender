@@ -3,7 +3,7 @@ import PersonalTab from '../components/PersonalTab'
 
 export default function PersonalDiscoveryPage() {
   return (
-    <PlaygroundLayout activeTab="personalDiscovery">
+    <PlaygroundLayout>
       <PersonalTab />
     </PlaygroundLayout>
   )

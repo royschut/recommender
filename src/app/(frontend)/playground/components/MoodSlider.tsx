@@ -21,23 +21,25 @@ const MoodSlider: React.FC<MoodSliderProps> = ({
   ariaLabel,
 }) => {
   return (
-    <div className="flex items-center justify-between text-xs text-gray-500">
-      <div className="flex items-center gap-1.5 w-14">
+    <div className="flex items-center w-64 min-w-[20rem] max-w-full px-4 py-2 bg-violet-200 rounded-full">
+      {/* Left label & icon */}
+      <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
         <div className="w-2.5 h-2.5 flex items-center justify-center">{leftIcon}</div>
-        <span className="text-left text-xs">{label}</span>
+        <span className="text-left text-xs whitespace-nowrap text-gray-600">{label}</span>
       </div>
+      {/* Slider */}
       <Slider.Root
         value={[value]}
         onValueChange={(values) => onValueChange(values[0])}
         min={-1}
         max={1}
         step={0.1}
-        className="relative flex items-center select-none touch-none w-80 h-5 mx-4"
+        className="relative flex items-center select-none touch-none flex-1 h-5 mx-3"
       >
-        <Slider.Track className="bg-gray-300 relative grow rounded-full h-1.5">
+        <Slider.Track className="bg-violet-400 relative grow rounded-full h-1.5">
           {value !== 0 && (
             <div
-              className="absolute bg-violet-400 rounded-full h-full"
+              className="absolute bg-violet-500 rounded-full h-full"
               style={{
                 left: value < 0 ? `${50 + value * 50}%` : '50%',
                 right: value > 0 ? `${50 - value * 50}%` : '50%',
@@ -45,7 +47,6 @@ const MoodSlider: React.FC<MoodSliderProps> = ({
             />
           )}
         </Slider.Track>
-        {/* Center indicator */}
         <div
           className="absolute top-1/2 transform -translate-y-1/2 w-0.5 h-2.5 bg-gray-400 pointer-events-none z-10"
           style={{ left: '50%', marginLeft: '-1px' }}
@@ -55,8 +56,9 @@ const MoodSlider: React.FC<MoodSliderProps> = ({
           aria-label={ariaLabel}
         />
       </Slider.Root>
-      <div className="flex items-center gap-1.5 w-14 justify-end">
-        <span className="text-right text-xs">{rightLabel}</span>
+      {/* Right label & icon */}
+      <div className="flex items-center gap-1.5 w-24 flex-shrink-0 justify-end">
+        <span className="text-right text-xs whitespace-nowrap text-gray-600">{rightLabel}</span>
         <div className="w-2.5 h-2.5 flex items-center justify-center">{rightIcon}</div>
       </div>
     </div>

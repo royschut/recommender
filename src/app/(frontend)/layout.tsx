@@ -1,22 +1,21 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import './styles.css'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryProvider } from './QueryProvider'
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient())
+export default function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryProvider>
       <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
         <body className={GeistSans.className}>
           <main>{children}</main>
         </body>
       </html>
-    </QueryClientProvider>
+    </QueryProvider>
   )
 }

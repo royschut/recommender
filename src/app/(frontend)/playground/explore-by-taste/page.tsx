@@ -7,7 +7,7 @@ import '../index.css'
 
 const ExploreByTastePage = () => {
   return (
-    <PlaygroundLayout activeTab="explore-by-taste">
+    <PlaygroundLayout>
       <div className="max-w-7xl mx-auto">
         {/* Hero Section */}
         <div className="text-center mb-12">
