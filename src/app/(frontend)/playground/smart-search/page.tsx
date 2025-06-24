@@ -15,6 +15,8 @@ import {
   GlobeIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  SliderIcon,
+  MixerHorizontalIcon,
 } from '@radix-ui/react-icons'
 import PlaygroundLayout from '../layout/PlaygroundLayout'
 import { classNames } from '../utils/cn'
@@ -120,6 +122,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
   const [showSearchSnackbar, setShowSearchSnackbar] = useState(false)
   const [hasShownSearchSnackbar, setHasShownSearchSnackbar] = useState(false)
   const [showAllSliders, setShowAllSliders] = useState(false)
+  const [showMoodPanel, setShowMoodPanel] = useState(false)
   const [visibleSections, setVisibleSections] = useState<number[]>([])
 
   useEffect(() => {
@@ -173,30 +176,128 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
         {/* Suggestions */}
         {!searchQuery.isLoading && !searchQuery.data && (
           <section
-            className={`space-y-6 transition-all duration-700 ease-out ${
+            className={`relative space-y-8 transition-all duration-700 ease-out ${
               visibleSections.includes(1) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
           >
-            {/* Toggle for taste-based search */}
-            {/* <div className="flex justify-center mb-6">
+            {/* Floating Mood Toggle - Top Right */}
+            <div className="absolute top-0 right-4 z-10">
               <Button
                 variant="ghost"
-                size="2"
-                onClick={() => setShowAllSliders(!showAllSliders)}
+                size="1"
+                onClick={() => setShowMoodPanel(!showMoodPanel)}
                 className={classNames(
-                  'flex items-center gap-3 cursor-pointer text-base font-medium',
-                  'text-violet-500 hover:text-violet-600',
-                  'hover:bg-violet-50 transition-colors duration-200',
+                  'group flex items-center gap-2 px-3 py-2',
+                  'bg-white/70 hover:bg-white/90 backdrop-blur-sm',
+                  'border border-gray-200/50 hover:border-violet-300/60',
+                  'text-gray-600 hover:text-violet-700',
+                  'shadow-sm hover:shadow-md',
+                  'transition-all duration-200 ease-out',
+                  'rounded-full text-xs font-medium',
+                  showMoodPanel && 'bg-violet-50 border-violet-200',
                 )}
               >
-                <LayersIcon className="w-5 h-5 text-violet-500" />
-                {showAllSliders ? 'Hide taste options' : 'Tweak your taste'}
+                <SliderIcon className="w-3.5 h-3.5" />
+                <span>{showMoodPanel ? 'Moods' : 'Moods'}</span>
+                <ChevronDownIcon
+                  className={classNames(
+                    'w-3 h-3 transition-transform duration-200',
+                    showMoodPanel ? 'rotate-180' : 'rotate-0',
+                  )}
+                />
               </Button>
-            </div> */}
+            </div>
 
             <div className="text-center">
-              <h2 className="text-xl font-light text-gray-600 mb-1">Or explore by surprise</h2>
+              <h2 className="text-xl font-light text-gray-600">Or explore by surprise</h2>
             </div>
+
+            {/* Subtle Mood Sliders - No Panel */}
+            <div
+              className={classNames(
+                'overflow-hidden transition-all duration-500 ease-out',
+                showMoodPanel
+                  ? 'max-h-[400px] opacity-100 transform translate-y-0'
+                  : 'max-h-0 opacity-0 transform -translate-y-2',
+              )}
+            >
+              <div className="max-w-xl mx-auto px-4 py-6 space-y-5">
+                <div className="text-center mb-6">
+                  <h3 className="text-sm font-medium text-gray-700 mb-1">Fine-tune your vibe</h3>
+                  <p className="text-xs text-gray-500">
+                    Adjust the sliders to match your current mood
+                  </p>
+                </div>
+
+                {sliders.slice(0, 2).map((slider) => (
+                  <MoodSlider
+                    key={slider.key}
+                    label={slider.label}
+                    value={sliderValues[slider.key]}
+                    onValueChange={(value) =>
+                      setSliderValues((prev) => ({ ...prev, [slider.key]: value }))
+                    }
+                    leftIcon={slider.leftIcon}
+                    rightIcon={slider.rightIcon}
+                    rightLabel={slider.rightLabel}
+                    ariaLabel={slider.ariaLabel}
+                  />
+                ))}
+
+                <div
+                  className={classNames(
+                    'overflow-hidden transition-all duration-300 ease-in-out',
+                    showAllSliders ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0',
+                  )}
+                >
+                  {showAllSliders && (
+                    <div className="space-y-5 pt-2">
+                      {sliders.slice(2).map((slider) => (
+                        <MoodSlider
+                          key={slider.key}
+                          label={slider.label}
+                          value={sliderValues[slider.key]}
+                          onValueChange={(value) =>
+                            setSliderValues((prev) => ({ ...prev, [slider.key]: value }))
+                          }
+                          leftIcon={slider.leftIcon}
+                          rightIcon={slider.rightIcon}
+                          rightLabel={slider.rightLabel}
+                          ariaLabel={slider.ariaLabel}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-center pt-2">
+                  <Button
+                    variant="ghost"
+                    size="1"
+                    onClick={() => setShowAllSliders(!showAllSliders)}
+                    className={classNames(
+                      'flex items-center gap-1.5 px-3 py-1.5',
+                      'text-xs font-medium text-gray-500 hover:text-gray-700',
+                      'hover:bg-gray-50 transition-all duration-200',
+                      'rounded-lg',
+                    )}
+                  >
+                    {showAllSliders ? (
+                      <>
+                        <span>Less</span>
+                        <ChevronUpIcon className="w-3 h-3" />
+                      </>
+                    ) : (
+                      <>
+                        <span>More</span>
+                        <ChevronDownIcon className="w-3 h-3" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             {suggestions.isLoading ? (
               <div className="space-y-8">
                 <div className="text-center pt-4 pb-6">
