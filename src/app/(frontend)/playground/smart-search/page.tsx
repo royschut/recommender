@@ -257,26 +257,6 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
               <div className={classNames('flex items-center space-x-3 w-full px-6')}>
                 <h2 className="text-xl font-semibold text-gray-600">{'Explore'}</h2>
                 <Button
-                  variant="soft"
-                  className={classNames(
-                    'px-4 py-1 rounded-full cursor-pointer',
-                    'text-violet-600 hover:bg-violet-400 hover:text-white',
-                    'hover:shadow-sm transition-all duration-200 ease-out',
-                    'text-sm',
-                  )}
-                  onClick={() => {
-                    setSliderValues({
-                      adventure: Math.round(Math.random() * 20 - 10) / 10,
-                      romance: Math.round(Math.random() * 20 - 10) / 10,
-                      complexity: Math.round(Math.random() * 20 - 10) / 10,
-                      emotion: Math.round(Math.random() * 20 - 10) / 10,
-                      realism: Math.round(Math.random() * 20 - 10) / 10,
-                    })
-                  }}
-                >
-                  {'🎲 Surprise me'}
-                </Button>
-                <Button
                   onClick={() => setShowMoodPanel(!showMoodPanel)}
                   variant="soft"
                   className={classNames(
@@ -288,8 +268,8 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                     showMoodPanel && 'bg-violet-200 border-violet-200',
                   )}
                 >
-                  <SliderIcon className="w-3.5 h-3.5" />
-                  <span>{'Moods'}</span>
+                  {/* <SliderIcon className="w-3.5 h-3.5" /> */}
+                  <span>{'Mood'}</span>
                   <ChevronDownIcon
                     className={classNames(
                       'w-3 h-3 transition-transform duration-200',
@@ -298,7 +278,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                   />
                 </Button>
 
-                {Object.values(sliderValues).some((value) => value !== 0) && (
+                {Object.values(sliderValues).some((value) => value !== 0) ? (
                   <div
                     className={classNames(
                       'px-2 text-violet-500 text-xs',
@@ -320,7 +300,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                           <span
                             key={key}
                             style={{ fontWeight, transition: 'font-weight 0.2s' }}
-                            className="mr-2 text-violet-500 text-xs"
+                            className="mr-2 text-gray-500 text-xs"
                           >
                             {direction}
                           </span>
@@ -344,6 +324,13 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                       <Cross2Icon className="w-3 h-3" />
                     </Button>
                   </div>
+                ) : (
+                  <span
+                    style={{ transition: 'font-weight 0.2s' }}
+                    className="mr-2 text-gray-500 text-xs"
+                  >
+                    {'Neutral'}
+                  </span>
                 )}
 
                 {suggestions.isFetching && (
@@ -375,17 +362,57 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                   showMoodPanel ? '' : 'max-h-0 opacity-0 transform -translate-y-2',
                 )}
               >
-                <div className="text-center flex space-y-2 flex-col items-center">
+                <div className="text-center flex space-y-2 flex-col items-start">
                   {/* <h3 className="text-sm font-medium text-gray-700">{'Fine-tune your vibe'}</h3> */}
                   <h4 className="text-xs text-gray-500 mt-2">
                     Adjust the sliders to match your current mood
                   </h4>
+                  <div className="flex items-center w-full mt-2">
+                    <Button
+                      variant="soft"
+                      className={classNames(
+                        'px-4 py-1 rounded-full cursor-pointer',
+                        'text-violet-600 hover:bg-violet-400 hover:text-white',
+                        'hover:shadow-sm transition-all duration-200 ease-out',
+                        'text-sm',
+                      )}
+                      onClick={() => {
+                        setSliderValues({
+                          adventure: Math.round(Math.random() * 20 - 10) / 10,
+                          romance: Math.round(Math.random() * 20 - 10) / 10,
+                          complexity: Math.round(Math.random() * 20 - 10) / 10,
+                          emotion: Math.round(Math.random() * 20 - 10) / 10,
+                          realism: Math.round(Math.random() * 20 - 10) / 10,
+                        })
+                      }}
+                    >
+                      {'🎲 Surprise me'}
+                    </Button>
+                    <Button
+                      variant="soft"
+                      className={classNames(
+                        'flex items-center px-4 py-1 rounded-full cursor-pointer',
+                        'text-violet-600 hover:bg-violet-400 hover:text-white',
+                        'hover:shadow-sm transition-all duration-200 ease-out',
+                        'text-sm',
+                      )}
+                      onClick={() => {
+                        setSliderValues({
+                          adventure: Math.round(Math.random() * 20 - 10) / 10,
+                          romance: Math.round(Math.random() * 20 - 10) / 10,
+                          complexity: Math.round(Math.random() * 20 - 10) / 10,
+                          emotion: Math.round(Math.random() * 20 - 10) / 10,
+                          realism: Math.round(Math.random() * 20 - 10) / 10,
+                        })
+                      }}
+                    >
+                      <Cross2Icon className="w-3 h-3 mr-1" />
+                      {'Reset'}
+                    </Button>
+                  </div>
                 </div>
                 <div
-                  className={classNames(
-                    'flex flex-wrap justify-center gap-2 mt-4',
-                    showMoodPanel ? 'mt-4' : '',
-                  )}
+                  className={classNames('flex flex-wrap gap-2 mt-4', showMoodPanel ? 'mt-4' : '')}
                 >
                   {sliders.map((slider) => (
                     <MoodSlider
