@@ -1,6 +1,14 @@
-import { CalendarIcon, InfoCircledIcon, StarFilledIcon, VideoIcon } from '@radix-ui/react-icons'
+import {
+  CalendarIcon,
+  HeartFilledIcon,
+  InfoCircledIcon,
+  StarFilledIcon,
+  VideoIcon,
+} from '@radix-ui/react-icons'
 import { classNames } from '../utils/cn'
 import { Card } from './ui'
+import { Button } from '@radix-ui/themes'
+import { useState } from 'react'
 
 export type Movie = {
   id: string
@@ -27,6 +35,8 @@ type Props = {
 }
 
 const MovieCard: React.FC<Props> = ({ movie, onClick, className, compact }) => {
+  const [isFavorite, setIsFavorite] = useState(false)
+
   const getPosterUrl = () => {
     return movie.image || movie.poster_path || movie.posterUrl
   }
@@ -94,7 +104,26 @@ const MovieCard: React.FC<Props> = ({ movie, onClick, className, compact }) => {
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+        {/* // Favorite button */}
+        <Button
+          variant="ghost"
+          className={classNames(
+            'absolute bottom-3 right-3 z-10 bg-white/80 hover:bg-white/90 text-gray-700 rounded-full p-1 shadow-sm transition-colors duration-200',
+            isFavorite ? ' bg-red-100 hover:bg-red-200 text-red-600' : '',
+            'cursor-pointer',
+            'shadow-sm hover:shadow-md',
+            'focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2',
+          )}
+          onClick={(e) => {
+            e.stopPropagation()
+            console.log('Clicked favorite button for movie:', movie.title)
+            setIsFavorite(!isFavorite)
+          }}
+        >
+          <HeartFilledIcon className="w-4 h-4" />
+        </Button>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
       </div>
 
       <div className="p-3 space-y-1.5">

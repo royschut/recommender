@@ -5,6 +5,7 @@ import { classNames } from './utils/cn'
 import { ToggleGroup } from 'radix-ui'
 import { MagnifyingGlassIcon, PersonIcon } from '@radix-ui/react-icons'
 import SmartSearch from './components/SmartSearch'
+import Personalised from './components/Personalised'
 
 const Playground = () => {
   const [isPersonalised, setIsPersonalised] = useState(false)
@@ -29,6 +30,8 @@ const Playground = () => {
       includeY ? `${visibleSections.includes(timing) ? 'translate-y-0' : 'translate-y-8'}` : '',
     )
   }
+
+  const mainContent = isPersonalised ? <Personalised /> : <SmartSearch />
 
   return (
     <div className="min-h-screen bg-[#f7f7fb] font-sans py-4">
@@ -68,7 +71,7 @@ const Playground = () => {
           </ToggleGroup.Item>
         </ToggleGroup.Root>
       </div>
-      {isPersonalised ? <div /> : <SmartSearch />}
+      {mainContent}
     </div>
   )
 }
