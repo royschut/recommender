@@ -148,6 +148,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
   const [isPersonalised, setIsPersonalised] = useState(false)
   const [visibleSections, setVisibleSections] = useState<number[]>([])
 
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
   const suggestionsRef = React.useRef<HTMLDivElement>(null)
 
   const fadeStyle = (timing: number, includeY = true, duration = 700, excludeTiming = -1) => {
@@ -227,6 +228,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
               type="text"
               placeholder="Search stories by feelings, not just words..."
               value={query}
+              ref={searchInputRef}
               onChange={(e) => setQuery(e.target.value)}
               className={classNames(
                 'w-full pl-16 pr-8 py-4 text-lg text-gray-900',
@@ -248,7 +250,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
             <div
               className={classNames(
                 `flex w-full justify-start align-center flex-col pt-4`,
-                'sticky top-0 z-2 bg-violet-50/100 backdrop-blur-sm',
+                'sticky top-0 z-2 bg-[#f7f7fb]/100 backdrop-blur-sm',
                 fadeStyle(2),
               )}
             >
@@ -264,11 +266,11 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                   )}
                   onClick={() => {
                     setSliderValues({
-                      adventure: Math.random(),
-                      romance: Math.random(),
-                      complexity: Math.random(),
-                      emotion: Math.random(),
-                      realism: Math.random(),
+                      adventure: Math.round(Math.random() * 20 - 10) / 10,
+                      romance: Math.round(Math.random() * 20 - 10) / 10,
+                      complexity: Math.round(Math.random() * 20 - 10) / 10,
+                      emotion: Math.round(Math.random() * 20 - 10) / 10,
+                      realism: Math.round(Math.random() * 20 - 10) / 10,
                     })
                   }}
                 >
@@ -297,7 +299,14 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                 </Button>
 
                 {Object.values(sliderValues).some((value) => value !== 0) && (
-                  <div className="right-4 top-2 z-10 px-2 py-1 text-violet-500 text-xs">
+                  <div
+                    className={classNames(
+                      'px-2 text-violet-500 text-xs',
+                      'transition-opacity duration-100 ease-out',
+                      'h-full flex items-center',
+                      // showMoodPanel ? 'opacity-0' : 'opacity-100',
+                    )}
+                  >
                     {Object.entries(sliderValues)
                       .filter(([key, value]) => value !== 0)
                       .map(([key, value]) => {
@@ -340,12 +349,27 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                 {suggestions.isFetching && (
                   <ReloadIcon className="inline-block animate-spin ml-4 w-4 h-4 text-violet-500" />
                 )}
+                <div className="flex flex-1 justify-end w-full">
+                  <Button
+                    variant="soft"
+                    className="px-4 py-2 rounded-full cursor-pointer text-violet-600 hover:bg-violet-400 hover:text-white hover:shadow-sm transition-all duration-200 ease-out"
+                    aria-label="Search"
+                    title="Search"
+                    onClick={() => {
+                      document.body.scrollIntoView({ behavior: 'smooth' })
+                      setTimeout(() => searchInputRef.current?.focus(), 600)
+                      setShowMoodPanel(false)
+                    }}
+                  >
+                    <MagnifyingGlassIcon className="w-6 h-6" />
+                  </Button>
+                </div>
               </div>
               <div
                 className={classNames(
                   'transition-all duration-500 ease-out',
                   'max-h-[400px] opacity-100 transform translate-y-0',
-                  'bg-violet-100/80 backdrop-blur-sm',
+                  'bg-violet-50/80 backdrop-blur-sm',
                   'mt-2 py-2 px-6',
                   'shadow-[inset_0_2px_16px_0_rgba(80,60,100,0.10)]',
                   showMoodPanel ? '' : 'max-h-0 opacity-0 transform -translate-y-2',
@@ -359,7 +383,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                 </div>
                 <div
                   className={classNames(
-                    'flex flex-wrap justify-center gap-2',
+                    'flex flex-wrap justify-center gap-2 mt-4',
                     showMoodPanel ? 'mt-4' : '',
                   )}
                 >

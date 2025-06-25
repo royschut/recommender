@@ -35,7 +35,7 @@ const PlaygroundLayout: React.FC<PlaygroundLayoutProps> = ({ children, activeTab
     router.push(routes[value as keyof typeof routes] || '/playground')
   }
 
-  return <div className="min-h-screen bg-violet-50 font-sans py-4">{children}</div>
+  return <div className="min-h-screen bg-[#f7f7fb] font-sans py-4">{children}</div>
 
   return (
     <div className="min-h-screen bg-violet-50 font-sans">
