@@ -6,6 +6,7 @@ import { ToggleGroup } from 'radix-ui'
 import { MagnifyingGlassIcon, PersonIcon } from '@radix-ui/react-icons'
 import SmartSearch from './components/SmartSearch'
 import Personalised from './components/Personalised'
+import { FavoritesProvider } from './components/FavoritesContext'
 
 const Playground = () => {
   const [isPersonalised, setIsPersonalised] = useState(false)
@@ -34,45 +35,47 @@ const Playground = () => {
   const mainContent = isPersonalised ? <Personalised /> : <SmartSearch />
 
   return (
-    <div className="min-h-screen bg-[#f7f7fb] font-sans py-4">
-      <div className="flex items-center justify-end mt-2 mb-6 px-4">
-        <ToggleGroup.Root
-          type="single"
-          value={isPersonalised ? 'personalised' : 'smart-search'}
-          className={classNames(
-            'inline-flex gap-1 rounded-full bg-violet-50 p-1 shadow-inner',
-            fadeStyle(2, false),
-          )}
-          onValueChange={(value) => setIsPersonalised(value === 'personalised')}
-        >
-          <ToggleGroup.Item
-            value="smart-search"
+    <FavoritesProvider>
+      <div className="min-h-screen bg-[#f7f7fb] font-sans py-4">
+        <div className="flex items-center justify-end mt-2 mb-6 px-4">
+          <ToggleGroup.Root
+            type="single"
+            value={isPersonalised ? 'personalised' : 'smart-search'}
             className={classNames(
-              'flex gap-1 items-center px-4 py-1 text-sm rounded-full transition-colors cursor-pointer',
-              !isPersonalised
-                ? 'bg-white text-violet-700 shadow-sm'
-                : 'text-gray-500 hover:bg-violet-100 hover:text-violet-700',
+              'inline-flex gap-1 rounded-full bg-violet-50 p-1 shadow-inner',
+              fadeStyle(2, false),
             )}
+            onValueChange={(value) => setIsPersonalised(value === 'personalised')}
           >
-            <MagnifyingGlassIcon />
-            {'Smart Explore'}
-          </ToggleGroup.Item>
-          <ToggleGroup.Item
-            value="personalised"
-            className={classNames(
-              'flex gap-1 items-center px-4 py-1 text-sm rounded-full transition-colors cursor-pointer',
-              isPersonalised
-                ? 'bg-white text-violet-700 shadow-sm'
-                : 'text-gray-500 hover:bg-violet-100 hover:text-violet-700',
-            )}
-          >
-            <PersonIcon />
-            {'Personal Mode'}
-          </ToggleGroup.Item>
-        </ToggleGroup.Root>
+            <ToggleGroup.Item
+              value="smart-search"
+              className={classNames(
+                'flex gap-1 items-center px-4 py-1 text-sm rounded-full transition-colors cursor-pointer',
+                !isPersonalised
+                  ? 'bg-white text-violet-700 shadow-sm'
+                  : 'text-gray-500 hover:bg-violet-100 hover:text-violet-700',
+              )}
+            >
+              <MagnifyingGlassIcon />
+              {'Smart Explore'}
+            </ToggleGroup.Item>
+            <ToggleGroup.Item
+              value="personalised"
+              className={classNames(
+                'flex gap-1 items-center px-4 py-1 text-sm rounded-full transition-colors cursor-pointer',
+                isPersonalised
+                  ? 'bg-white text-violet-700 shadow-sm'
+                  : 'text-gray-500 hover:bg-violet-100 hover:text-violet-700',
+              )}
+            >
+              <PersonIcon />
+              {'Personal Mode'}
+            </ToggleGroup.Item>
+          </ToggleGroup.Root>
+        </div>
+        {mainContent}
       </div>
-      {mainContent}
-    </div>
+    </FavoritesProvider>
   )
 }
 

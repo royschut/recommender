@@ -285,7 +285,7 @@ const SmartSearchPage: React.FC<Props> = ({ className }) => {
                 ) : (
                   <span
                     style={{ transition: 'font-weight 0.2s' }}
-                    className="mr-2 text-gray-500 text-xs"
+                    className="mr-2 text-gray-600 text-xs"
                   >
                     {'Neutral'}
                   </span>
