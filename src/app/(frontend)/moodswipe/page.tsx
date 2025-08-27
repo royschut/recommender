@@ -52,9 +52,16 @@ const Playground = () => {
         }}
       />
       {isActive && (
-        <div className="absolute bottom-4 left-4 right-4 text-white pointer-events-none">
-          <h2 className="text-lg font-bold mb-2">{movie.title}</h2>
-          <p className="text-sm opacity-80">{movie.overview?.substring(0, 100)}...</p>
+        <div className="absolute bottom-0 left-0 right-0 text-white pointer-events-none">
+          {/* Deeper gradient overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+
+          <div className="relative p-4">
+            <h2 className="text-lg font-bold mb-2 drop-shadow-lg shadow-black">{movie.title}</h2>
+            <p className="text-sm opacity-90 drop-shadow-md shadow-black">
+              {movie.overview?.substring(0, 100)}...
+            </p>
+          </div>
         </div>
       )}
     </>

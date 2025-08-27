@@ -65,7 +65,7 @@ export function SwipeContainer<T>({
 
   const handleTouchEnd = () => {
     setIsDragging(false)
-    const threshold = 100
+    const threshold = 50 // Reduced from 100 for quicker response
 
     if (swipeDirection === 'horizontal' && Math.abs(horizontalDragOffset) > threshold) {
       if (horizontalDragOffset > 0 && currentHorizontalIndex > 0) {
@@ -125,7 +125,7 @@ export function SwipeContainer<T>({
 
   const handleMouseEnd = () => {
     setIsDragging(false)
-    const threshold = 100
+    const threshold = 50 // Reduced from 100 for quicker response
 
     if (swipeDirection === 'horizontal' && Math.abs(horizontalDragOffset) > threshold) {
       if (horizontalDragOffset > 0 && currentHorizontalIndex > 0) {
@@ -228,7 +228,7 @@ export function SwipeContainer<T>({
             style={{
               transform: `translateX(${columnOffset}%)`,
               transition:
-                isDragging && swipeDirection === 'horizontal' ? 'none' : 'transform 0.3s ease-out',
+                isDragging && swipeDirection === 'horizontal' ? 'none' : 'transform 0.1s ease-out',
             }}
           >
             {/* Render vertical items within this column */}
@@ -252,7 +252,7 @@ export function SwipeContainer<T>({
                       transition:
                         isDragging && swipeDirection === 'vertical'
                           ? 'none'
-                          : 'transform 0.3s ease-out',
+                          : 'transform 0.1s ease-out',
                     }}
                   >
                     {renderItem(item, actualIndex, isActiveItem)}
