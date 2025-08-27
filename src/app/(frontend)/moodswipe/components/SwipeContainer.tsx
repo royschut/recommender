@@ -2,92 +2,174 @@
 import React from 'react'
 
 interface SwipeContainerProps<T> {
-  items: T[]
-  currentIndex: number
-  onIndexChange: (newIndex: number) => void
+  movieColumns: T[][]
+  currentVerticalIndex: number
+  currentHorizontalIndex: number
+  onVerticalIndexChange: (newIndex: number) => void
+  onHorizontalIndexChange: (newIndex: number) => void
   renderItem: (item: T, index: number, isActive: boolean) => React.ReactNode
   className?: string
   style?: React.CSSProperties
 }
 
 export function SwipeContainer<T>({
-  items,
-  currentIndex,
-  onIndexChange,
+  movieColumns,
+  currentVerticalIndex,
+  currentHorizontalIndex,
+  onVerticalIndexChange,
+  onHorizontalIndexChange,
   renderItem,
   className = '',
   style = {},
 }: SwipeContainerProps<T>) {
-  const [dragOffset, setDragOffset] = React.useState(0)
+  const [verticalDragOffset, setVerticalDragOffset] = React.useState(0)
+  const [horizontalDragOffset, setHorizontalDragOffset] = React.useState(0)
   const [isDragging, setIsDragging] = React.useState(false)
+  const [startX, setStartX] = React.useState(0)
   const [startY, setStartY] = React.useState(0)
+  const [swipeDirection, setSwipeDirection] = React.useState<'horizontal' | 'vertical' | null>(null)
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true)
+    setStartX(e.touches[0].clientX)
     setStartY(e.touches[0].clientY)
+    setSwipeDirection(null)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging) return
 
+    const currentX = e.touches[0].clientX
     const currentY = e.touches[0].clientY
-    const diff = currentY - startY
-    setDragOffset(diff)
+    const diffX = currentX - startX
+    const diffY = currentY - startY
+
+    // Determine swipe direction on first significant movement
+    if (!swipeDirection && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        setSwipeDirection('horizontal')
+      } else {
+        setSwipeDirection('vertical')
+      }
+    }
+
+    // Update offset based on direction
+    if (swipeDirection === 'horizontal') {
+      setHorizontalDragOffset(diffX)
+      setVerticalDragOffset(0)
+    } else if (swipeDirection === 'vertical') {
+      setVerticalDragOffset(diffY)
+      setHorizontalDragOffset(0)
+    }
   }
 
   const handleTouchEnd = () => {
     setIsDragging(false)
+    const threshold = 100
 
-    const threshold = 100 // minimum swipe distance
-
-    if (Math.abs(dragOffset) > threshold) {
-      if (dragOffset > 0 && currentIndex > 0) {
+    if (swipeDirection === 'horizontal' && Math.abs(horizontalDragOffset) > threshold) {
+      if (horizontalDragOffset > 0 && currentHorizontalIndex > 0) {
+        // Swipe right - go to left column
+        onHorizontalIndexChange(currentHorizontalIndex - 1)
+      } else if (horizontalDragOffset < 0 && currentHorizontalIndex < movieColumns.length - 1) {
+        // Swipe left - go to right column
+        onHorizontalIndexChange(currentHorizontalIndex + 1)
+      }
+    } else if (swipeDirection === 'vertical' && Math.abs(verticalDragOffset) > threshold) {
+      const currentColumn = movieColumns[currentHorizontalIndex]
+      if (verticalDragOffset > 0 && currentVerticalIndex > 0) {
         // Swipe down - go to previous
-        onIndexChange(currentIndex - 1)
-      } else if (dragOffset < 0 && currentIndex < items.length - 1) {
+        onVerticalIndexChange(currentVerticalIndex - 1)
+      } else if (verticalDragOffset < 0 && currentVerticalIndex < currentColumn.length - 1) {
         // Swipe up - go to next
-        onIndexChange(currentIndex + 1)
+        onVerticalIndexChange(currentVerticalIndex + 1)
       }
     }
 
-    setDragOffset(0)
+    setVerticalDragOffset(0)
+    setHorizontalDragOffset(0)
+    setSwipeDirection(null)
   }
 
   const handleMouseStart = (e: React.MouseEvent) => {
     setIsDragging(true)
+    setStartX(e.clientX)
     setStartY(e.clientY)
+    setSwipeDirection(null)
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return
 
+    const currentX = e.clientX
     const currentY = e.clientY
-    const diff = currentY - startY
-    setDragOffset(diff)
+    const diffX = currentX - startX
+    const diffY = currentY - startY
+
+    if (!swipeDirection && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        setSwipeDirection('horizontal')
+      } else {
+        setSwipeDirection('vertical')
+      }
+    }
+
+    if (swipeDirection === 'horizontal') {
+      setHorizontalDragOffset(diffX)
+      setVerticalDragOffset(0)
+    } else if (swipeDirection === 'vertical') {
+      setVerticalDragOffset(diffY)
+      setHorizontalDragOffset(0)
+    }
   }
 
   const handleMouseEnd = () => {
     setIsDragging(false)
-
     const threshold = 100
 
-    if (Math.abs(dragOffset) > threshold) {
-      if (dragOffset > 0 && currentIndex > 0) {
-        onIndexChange(currentIndex - 1)
-      } else if (dragOffset < 0 && currentIndex < items.length - 1) {
-        onIndexChange(currentIndex + 1)
+    if (swipeDirection === 'horizontal' && Math.abs(horizontalDragOffset) > threshold) {
+      if (horizontalDragOffset > 0 && currentHorizontalIndex > 0) {
+        onHorizontalIndexChange(currentHorizontalIndex - 1)
+      } else if (horizontalDragOffset < 0 && currentHorizontalIndex < movieColumns.length - 1) {
+        onHorizontalIndexChange(currentHorizontalIndex + 1)
+      }
+    } else if (swipeDirection === 'vertical' && Math.abs(verticalDragOffset) > threshold) {
+      const currentColumn = movieColumns[currentHorizontalIndex]
+      if (verticalDragOffset > 0 && currentVerticalIndex > 0) {
+        onVerticalIndexChange(currentVerticalIndex - 1)
+      } else if (verticalDragOffset < 0 && currentVerticalIndex < currentColumn.length - 1) {
+        onVerticalIndexChange(currentVerticalIndex + 1)
       }
     }
 
-    setDragOffset(0)
+    setVerticalDragOffset(0)
+    setHorizontalDragOffset(0)
+    setSwipeDirection(null)
   }
 
   React.useEffect(() => {
     const handleMouseMoveGlobal = (e: MouseEvent) => {
       if (!isDragging) return
+      const currentX = e.clientX
       const currentY = e.clientY
-      const diff = currentY - startY
-      setDragOffset(diff)
+      const diffX = currentX - startX
+      const diffY = currentY - startY
+
+      if (!swipeDirection && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+          setSwipeDirection('horizontal')
+        } else {
+          setSwipeDirection('vertical')
+        }
+      }
+
+      if (swipeDirection === 'horizontal') {
+        setHorizontalDragOffset(diffX)
+        setVerticalDragOffset(0)
+      } else if (swipeDirection === 'vertical') {
+        setVerticalDragOffset(diffY)
+        setHorizontalDragOffset(0)
+      }
     }
 
     const handleMouseUpGlobal = () => {
@@ -105,9 +187,19 @@ export function SwipeContainer<T>({
       document.removeEventListener('mousemove', handleMouseMoveGlobal)
       document.removeEventListener('mouseup', handleMouseUpGlobal)
     }
-  }, [isDragging, startY, dragOffset, currentIndex, items.length])
+  }, [
+    isDragging,
+    startX,
+    startY,
+    swipeDirection,
+    horizontalDragOffset,
+    verticalDragOffset,
+    currentHorizontalIndex,
+    currentVerticalIndex,
+    movieColumns.length,
+  ])
 
-  if (!items || items.length === 0) {
+  if (!movieColumns || movieColumns.length === 0) {
     return null
   }
 
@@ -122,22 +214,51 @@ export function SwipeContainer<T>({
       onMouseUp={handleMouseEnd}
       style={{ userSelect: 'none', ...style }}
     >
-      {items.slice(Math.max(0, currentIndex - 1), currentIndex + 2).map((item, idx) => {
-        const actualIndex = Math.max(0, currentIndex - 1) + idx
-        const isActive = actualIndex === currentIndex
-        const baseOffset = (actualIndex - currentIndex) * 100
-        const currentOffset = baseOffset + (dragOffset / window.innerHeight) * 100
+      {/* Render 3 horizontal columns */}
+      {movieColumns.map((column, columnIndex) => {
+        const isActiveColumn = columnIndex === currentHorizontalIndex
+        const columnOffset =
+          (columnIndex - currentHorizontalIndex) * 100 +
+          (horizontalDragOffset / window.innerWidth) * 100
 
         return (
           <div
-            key={actualIndex}
+            key={columnIndex}
             className="absolute w-full h-full"
             style={{
-              transform: `translateY(${currentOffset}%)`,
-              transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+              transform: `translateX(${columnOffset}%)`,
+              transition:
+                isDragging && swipeDirection === 'horizontal' ? 'none' : 'transform 0.3s ease-out',
             }}
           >
-            {renderItem(item, actualIndex, isActive)}
+            {/* Render vertical items within this column */}
+            {column
+              .slice(Math.max(0, currentVerticalIndex - 1), currentVerticalIndex + 2)
+              .map((item, idx) => {
+                const actualIndex = Math.max(0, currentVerticalIndex - 1) + idx
+                const isActiveItem = actualIndex === currentVerticalIndex && isActiveColumn
+                const verticalOffset =
+                  (actualIndex - currentVerticalIndex) * 100 +
+                  (swipeDirection === 'vertical'
+                    ? (verticalDragOffset / window.innerHeight) * 100
+                    : 0)
+
+                return (
+                  <div
+                    key={`${columnIndex}-${actualIndex}`}
+                    className="absolute w-full h-full"
+                    style={{
+                      transform: `translateY(${verticalOffset}%)`,
+                      transition:
+                        isDragging && swipeDirection === 'vertical'
+                          ? 'none'
+                          : 'transform 0.3s ease-out',
+                    }}
+                  >
+                    {renderItem(item, actualIndex, isActiveItem)}
+                  </div>
+                )
+              })}
           </div>
         )
       })}

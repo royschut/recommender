@@ -7,14 +7,15 @@ import { Movie } from '../playground/components/MovieCard'
 import { SwipeContainer } from './components/SwipeContainer'
 
 const Playground = () => {
-  const [currentIndex, setCurrentIndex] = React.useState(0)
+  const [currentVerticalIndex, setCurrentVerticalIndex] = React.useState(0)
+  const [currentHorizontalIndex, setCurrentHorizontalIndex] = React.useState(1) // Start in middle column
 
   const suggestions = useQuery({
     queryKey: ['suggestions'],
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const requestBody = {
-        limit: 24,
+        limit: 100,
       }
 
       return fetch('/api/explore', {
@@ -26,6 +27,17 @@ const Playground = () => {
   })
 
   const movies = suggestions.data?.results as Movie[]
+
+  // Split movies into 3 arrays of 20 each
+  const movieColumns = React.useMemo(() => {
+    if (!movies || movies.length === 0) return [[], [], []]
+
+    const leftColumn = movies.slice(0, 20)
+    const centerColumn = movies.slice(20, 40)
+    const rightColumn = movies.slice(40, 60)
+
+    return [leftColumn, centerColumn, rightColumn]
+  }, [movies])
 
   const renderMovieItem = (movie: Movie, index: number, isActive: boolean) => (
     <>
@@ -61,9 +73,11 @@ const Playground = () => {
           style={{ top: 15, right: 15, bottom: 15, left: 15, borderRadius: 25 }}
         >
           <SwipeContainer
-            items={movies}
-            currentIndex={currentIndex}
-            onIndexChange={setCurrentIndex}
+            movieColumns={movieColumns}
+            currentVerticalIndex={currentVerticalIndex}
+            currentHorizontalIndex={currentHorizontalIndex}
+            onVerticalIndexChange={setCurrentVerticalIndex}
+            onHorizontalIndexChange={setCurrentHorizontalIndex}
             renderItem={renderMovieItem}
           />
         </div>
