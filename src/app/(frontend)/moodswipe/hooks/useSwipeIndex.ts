@@ -1,13 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Movie } from '../../playground/components/MovieCard'
+import { SwipeDirection } from '../page'
 
-type SwipeDirection = 'up' | 'down' | 'left' | 'right'
-
-interface UseSwipeIndexProps {
-  movies: Movie[]
-}
-
-export const useSwipeIndex = ({ movies }: UseSwipeIndexProps) => {
+export const useSwipeIndex = (movies: Movie[]) => {
   const [xIndex, setXIndex] = useState(1) // Start at center column
   const [yIndex, setYIndex] = useState(0)
 
@@ -21,11 +16,6 @@ export const useSwipeIndex = ({ movies }: UseSwipeIndexProps) => {
 
     return [leftColumn, centerColumn, rightColumn]
   }, [movies])
-
-  const setIndex = (newXIndex: number, newYIndex: number) => {
-    setXIndex(newXIndex)
-    setYIndex(newYIndex)
-  }
 
   const handleSwipe = (direction: SwipeDirection) => {
     const currentColumn = movieColumns[xIndex]
@@ -54,40 +44,9 @@ export const useSwipeIndex = ({ movies }: UseSwipeIndexProps) => {
     }
   }
 
-  // Add keyboard event listeners
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      switch (event.key) {
-        case 'ArrowUp':
-          event.preventDefault()
-          handleSwipe('up')
-          break
-        case 'ArrowDown':
-          event.preventDefault()
-          handleSwipe('down')
-          break
-        case 'ArrowLeft':
-          event.preventDefault()
-          handleSwipe('left')
-          break
-        case 'ArrowRight':
-          event.preventDefault()
-          handleSwipe('right')
-          break
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [xIndex, yIndex, movieColumns])
-
   return {
     xIndex,
     yIndex,
-    setIndex,
     handleSwipe,
     movieColumns,
   }

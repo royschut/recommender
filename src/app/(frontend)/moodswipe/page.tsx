@@ -9,10 +9,12 @@ import { SwipeIndicator } from './components/SwipeIndicator'
 import { ArrowKey } from './components/ArrowKey'
 import { MovieCard } from './components/MovieCard'
 import { useSwipeIndex } from './hooks/useSwipeIndex'
+import { useKeyListeners } from './hooks/useKeyListeners'
+import { useDragListeners } from './hooks/useDragListeners'
+
+export type SwipeDirection = 'up' | 'down' | 'left' | 'right'
 
 const MoodSwipe = () => {
-  const [isSwipping, setIsSwipping] = React.useState(false)
-
   const suggestions = useQuery({
     queryKey: ['suggestions'],
     placeholderData: keepPreviousData,
@@ -24,10 +26,12 @@ const MoodSwipe = () => {
     },
   })
 
-  const movies = suggestions.data?.results as Movie[]
-  const { xIndex, yIndex, setIndex, handleSwipe, movieColumns } = useSwipeIndex({
-    movies: movies || [],
-  })
+  const movies: Movie[] = suggestions.data?.results || []
+  const { xIndex, yIndex, handleSwipe, movieColumns } = useSwipeIndex(movies)
+
+  useKeyListeners(handleSwipe)
+  const { verticalDragOffset, horizontalDragOffset, isSwipping, dragHandlers } =
+    useDragListeners(handleSwipe)
 
   if (!movies || movies.length === 0) {
     return <div>Loading...</div>
@@ -39,17 +43,18 @@ const MoodSwipe = () => {
         <div className="relative">
           <Image src={phoneImage} alt="Phone mockup" width={390} height={844} className="block" />
           <div className="absolute inset-[15px] bg-black rounded-[25px] overflow-hidden">
-            <SwipeContainer
-              movieColumns={movieColumns}
-              currentVerticalIndex={yIndex}
-              currentHorizontalIndex={xIndex}
-              onVerticalIndexChange={(newYIndex) => setIndex(xIndex, newYIndex)}
-              onHorizontalIndexChange={(newXIndex) => setIndex(newXIndex, yIndex)}
-              onSwipeStateChange={setIsSwipping}
-              renderItem={(movie: Movie, isActive: boolean) => (
-                <MovieCard movie={movie} isActive={isActive} isSwipping={isSwipping} />
-              )}
-            />
+            <div {...dragHandlers}>
+              <SwipeContainer
+                movieColumns={movieColumns}
+                currentVerticalIndex={yIndex}
+                currentHorizontalIndex={xIndex}
+                verticalDragOffset={verticalDragOffset}
+                horizontalDragOffset={horizontalDragOffset}
+                renderItem={(movie: Movie, isActive: boolean) => (
+                  <MovieCard movie={movie} isActive={isActive} isSwipping={isSwipping} />
+                )}
+              />
+            </div>
 
             <div
               className={`transition-opacity duration-300 ${!isSwipping ? 'opacity-100' : 'opacity-0'}`}
