@@ -1,5 +1,4 @@
 'use client'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import React from 'react'
 import Image from 'next/image'
 import phoneImage from './assets/phone.png'
@@ -8,6 +7,7 @@ import { SwipeContainer } from './components/SwipeContainer'
 import { SwipeIndicator } from './components/SwipeIndicator'
 import { ArrowKey } from './components/ArrowKey'
 import { MovieCard } from './components/MovieCard'
+import { useMovies } from './hooks/useMovies'
 import { useSwipeIndex } from './hooks/useSwipeIndex'
 import { useKeyListeners } from './hooks/useKeyListeners'
 import { useDragListeners } from './hooks/useDragListeners'
@@ -15,25 +15,14 @@ import { useDragListeners } from './hooks/useDragListeners'
 export type SwipeDirection = 'up' | 'down' | 'left' | 'right'
 
 const MoodSwipe = () => {
-  const suggestions = useQuery({
-    queryKey: ['suggestions'],
-    placeholderData: keepPreviousData,
-    queryFn: async () => {
-      return fetch('/api/moodswipe', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      }).then((res) => res.json())
-    },
-  })
+  const { movies, isLoading } = useMovies()
 
-  const movies: Movie[] = suggestions.data?.results || []
   const { xIndex, yIndex, handleSwipe, movieColumns } = useSwipeIndex(movies)
-
   useKeyListeners(handleSwipe)
   const { verticalDragOffset, horizontalDragOffset, isSwipping, dragHandlers } =
     useDragListeners(handleSwipe)
 
-  if (!movies || movies.length === 0) {
+  if (isLoading || !movies || movies.length === 0) {
     return <div>Loading...</div>
   }
 
