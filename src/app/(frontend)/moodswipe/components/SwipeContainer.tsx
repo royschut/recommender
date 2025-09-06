@@ -8,7 +8,7 @@ interface SwipeContainerProps<T> {
   onVerticalIndexChange: (newIndex: number) => void
   onHorizontalIndexChange: (newIndex: number) => void
   onSwipeStateChange?: (isSwipping: boolean) => void
-  renderItem: (item: T, index: number, isActive: boolean) => React.ReactNode
+  renderItem: (item: T, isActive: boolean) => React.ReactNode
   className?: string
   style?: React.CSSProperties
 }
@@ -220,7 +220,6 @@ export function SwipeContainer<T>({
       onMouseUp={handleMouseEnd}
       style={{ userSelect: 'none', ...style }}
     >
-      {/* Render 3 horizontal columns */}
       {movieColumns.map((column, columnIndex) => {
         const isActiveColumn = columnIndex === currentHorizontalIndex
         const columnOffset =
@@ -237,7 +236,6 @@ export function SwipeContainer<T>({
                 isDragging && swipeDirection === 'horizontal' ? 'none' : 'transform 0.1s ease-out',
             }}
           >
-            {/* Render vertical items within this column */}
             {column
               .slice(Math.max(0, currentVerticalIndex - 1), currentVerticalIndex + 2)
               .map((item, idx) => {
@@ -261,7 +259,7 @@ export function SwipeContainer<T>({
                           : 'transform 0.1s ease-out',
                     }}
                   >
-                    {renderItem(item, actualIndex, isActiveItem)}
+                    {renderItem(item, isActiveItem)}
                   </div>
                 )
               })}
