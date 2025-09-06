@@ -15,14 +15,10 @@ export function useMovies(enabled = true) {
     enabled,
     initialPageParam: { excluded: [] },
     queryFn: async ({ pageParam }) => {
-      const url = new URL('/api/moodswipe', window.location.origin)
-      if (pageParam.excluded.length > 0) {
-        url.searchParams.set('excluded', pageParam.excluded.join(','))
-      }
-
-      const res = await fetch(url.toString(), {
-        method: 'GET',
+      const res = await fetch('/api/moodswipe', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ excluded: pageParam.excluded }),
       })
       return (await res.json()) as Page
     },

@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useEffect } from 'react'
 import Image from 'next/image'
 import phoneImage from './assets/phone.png'
 import { Movie } from '../playground/components/MovieCard'
@@ -24,12 +24,9 @@ const MoodSwipe = () => {
     useDragListeners(handleSwipe)
 
   // Load more movies when we're getting close to the end
-  React.useEffect(() => {
-    const totalMovies = movies.length
-    const currentMovieIndex = yIndex * movieColumns.length + xIndex
-
-    // Fetch next page when we're 5 movies away from the end
-    if (currentMovieIndex >= totalMovies - 5 && hasNextPage && !isFetchingNextPage) {
+  useEffect(() => {
+    if (xIndex !== 1) return
+    if (yIndex >= movies.length - 5 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage()
     }
   }, [

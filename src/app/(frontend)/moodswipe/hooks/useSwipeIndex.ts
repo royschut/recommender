@@ -48,6 +48,6 @@ export const useSwipeIndex = (movies: Movie[]) => {
     xIndex,
     yIndex,
     handleSwipe,
-    movieColumns,
+    movieColumns: [[], movies, []],
   }
 }

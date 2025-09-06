@@ -8,19 +8,27 @@ const qdrant = new QdrantClient({
   apiKey: process.env.QDRANT_API_KEY,
 })
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const excludedParam = searchParams.get('excluded')
-    const excludedIds = excludedParam ? excludedParam.split(',').filter(Boolean) : []
+    const body = await request.json()
+    const excludedIds = body.excluded || []
+    const collectionName = 'movie-embeddings'
 
-    const searchResults = await qdrant.query('movie-embeddings', {
+    const queryOptions: any = {
       query: { sample: 'random' },
       with_payload: true,
       with_vector: false,
       limit: 10,
-      filter: { must_not: [{ key: 'movieId', match: { any: excludedIds } }] },
-    })
+    }
+
+    // Only add filter if there are excluded IDs
+    if (excludedIds.length > 0) {
+      queryOptions.filter = {
+        must_not: [{ key: 'movieId', match: { any: excludedIds } }],
+      }
+    }
+
+    const searchResults = await qdrant.query(collectionName, queryOptions)
 
     if (!searchResults.points?.length) {
       return NextResponse.json({
@@ -52,7 +60,7 @@ export async function GET(request: Request) {
       excluded: excludedIds.length,
     })
   } catch (error: any) {
-    console.error('❌ MoodSwipe GET API error:', error)
+    console.error('❌ MoodSwipe POST API error:', error)
     return NextResponse.json(
       { success: false, error: 'Error while fetching movies', details: error.message },
       { status: 500 },
