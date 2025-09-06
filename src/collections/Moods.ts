@@ -1,4 +1,10 @@
 import type { CollectionConfig } from 'payload'
+import {
+  createMoodEmbedding,
+  updateMoodEmbedding,
+  deleteMoodEmbedding,
+  ensureConceptVectorsCollection,
+} from '../utils/moodEmbeddings'
 
 export const Moods: CollectionConfig = {
   slug: 'moods',
@@ -7,6 +13,39 @@ export const Moods: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    beforeChange: [
+      async () => {
+        await ensureConceptVectorsCollection()
+      },
+    ],
+    afterChange: [
+      async ({ req, doc, operation, previousDoc }) => {
+        if (operation === 'create') {
+          const qdrantId = await createMoodEmbedding(doc.id, doc.description)
+          await req.payload.update({
+            collection: 'moods',
+            id: doc.id,
+            data: { qdrantId, hasEmbedding: true },
+          })
+        } else if (operation === 'update' && previousDoc?.description !== doc.description) {
+          await updateMoodEmbedding(doc.id, doc.description)
+          if (!doc.hasEmbedding) {
+            await req.payload.update({
+              collection: 'moods',
+              id: doc.id,
+              data: { hasEmbedding: true },
+            })
+          }
+        }
+      },
+    ],
+    beforeDelete: [
+      async ({ id }) => {
+        await deleteMoodEmbedding(String(id))
+      },
+    ],
   },
   fields: [
     {
