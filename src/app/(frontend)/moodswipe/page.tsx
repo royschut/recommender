@@ -64,6 +64,36 @@ const MoodSwipe = () => {
     }
   }
 
+  // Add keyboard event listeners
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault()
+          handleArrowClick('up')
+          break
+        case 'ArrowDown':
+          event.preventDefault()
+          handleArrowClick('down')
+          break
+        case 'ArrowLeft':
+          event.preventDefault()
+          handleArrowClick('left')
+          break
+        case 'ArrowRight':
+          event.preventDefault()
+          handleArrowClick('right')
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [currentVerticalIndex, currentHorizontalIndex, movieColumns])
+
   if (!movies || movies.length === 0) {
     return <div>Loading...</div>
   }
