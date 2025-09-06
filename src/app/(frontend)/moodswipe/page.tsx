@@ -15,16 +15,38 @@ import { useDragListeners } from './hooks/useDragListeners'
 export type SwipeDirection = 'up' | 'down' | 'left' | 'right'
 
 const MoodSwipe = () => {
-  const { movies, isLoading } = useMovies()
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useMovies()
+  const movies: Movie[] = data?.pages?.flatMap((page: { results: Movie[] }) => page.results) ?? []
 
   const { xIndex, yIndex, handleSwipe, movieColumns } = useSwipeIndex(movies)
   useKeyListeners(handleSwipe)
   const { verticalDragOffset, horizontalDragOffset, isSwipping, dragHandlers } =
     useDragListeners(handleSwipe)
 
+  // Load more movies when we're getting close to the end
+  React.useEffect(() => {
+    const totalMovies = movies.length
+    const currentMovieIndex = yIndex * movieColumns.length + xIndex
+
+    // Fetch next page when we're 5 movies away from the end
+    if (currentMovieIndex >= totalMovies - 5 && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [
+    xIndex,
+    yIndex,
+    movies.length,
+    movieColumns.length,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  ])
+
   if (isLoading || !movies || movies.length === 0) {
     return <div>Loading...</div>
   }
+
+  console.log(movies, movieColumns, xIndex, yIndex)
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-900 p-8">

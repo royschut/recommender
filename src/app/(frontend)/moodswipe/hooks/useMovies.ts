@@ -1,29 +1,33 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Movie } from '../../playground/components/MovieCard'
+import { useInfiniteQuery, InfiniteData } from '@tanstack/react-query'
+import type { Movie } from '../../playground/components/MovieCard'
 
-interface UseMoviesOptions {
-  enabled?: boolean
+interface Page {
+  results: Movie[]
 }
 
-export const useMovies = (options: UseMoviesOptions = {}) => {
-  const { enabled = true } = options
+interface PageParam {
+  excluded: string[]
+}
 
-  const query = useQuery({
+export function useMovies(enabled = true) {
+  return useInfiniteQuery<Page, Error, InfiniteData<Page>, string[], PageParam>({
     queryKey: ['suggestions'],
-    placeholderData: keepPreviousData,
     enabled,
-    queryFn: async () => {
-      return fetch('/api/moodswipe', {
+    initialPageParam: { excluded: [] },
+    queryFn: async ({ pageParam }) => {
+      const url = new URL('/api/moodswipe', window.location.origin)
+      if (pageParam.excluded.length > 0) {
+        url.searchParams.set('excluded', pageParam.excluded.join(','))
+      }
+
+      const res = await fetch(url.toString(), {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-      }).then((res) => res.json())
+      })
+      return (await res.json()) as Page
+    },
+    getNextPageParam: (_, allPages) => {
+      return { excluded: allPages.flatMap((page) => page.results.map((movie) => String(movie.id))) }
     },
   })
-
-  const movies: Movie[] = query.data?.results || []
-
-  return {
-    ...query,
-    movies,
-  }
 }

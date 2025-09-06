@@ -8,16 +8,18 @@ const qdrant = new QdrantClient({
   apiKey: process.env.QDRANT_API_KEY,
 })
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const collectionName = 'movie-embeddings'
-    const limit = 30
+    const { searchParams } = new URL(request.url)
+    const excludedParam = searchParams.get('excluded')
+    const excludedIds = excludedParam ? excludedParam.split(',').filter(Boolean) : []
 
-    const searchResults = await qdrant.query(collectionName, {
+    const searchResults = await qdrant.query('movie-embeddings', {
       query: { sample: 'random' },
       with_payload: true,
       with_vector: false,
-      limit: limit,
+      limit: 10,
+      filter: { must_not: [{ key: 'movieId', match: { any: excludedIds } }] },
     })
 
     if (!searchResults.points?.length) {
@@ -26,36 +28,33 @@ export async function GET() {
         results: [],
         totalFound: 0,
         method: 'random_sample',
+        excluded: excludedIds.length,
       })
     }
 
     const payloadConfig = await config
     const payload = await getPayload({ config: payloadConfig })
 
+    const movieIds = searchResults.points
+      .map((point: any) => point.payload?.movieId)
+      .filter(Boolean)
+
     const movies = await payload.find({
       collection: 'movies',
-      where: {
-        id: {
-          in: searchResults.points.map((point: any) => point.payload?.movieId).filter(Boolean),
-        },
-      },
-      limit: searchResults.points.length,
+      where: { id: { in: movieIds } },
+      limit: movieIds.length,
     })
 
     return NextResponse.json({
       success: true,
       results: movies.docs,
       totalFound: movies.totalDocs,
-      method: 'random_sample',
+      excluded: excludedIds.length,
     })
   } catch (error: any) {
     console.error('❌ MoodSwipe GET API error:', error)
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Er is een fout opgetreden bij het ophalen van films',
-        details: error.message,
-      },
+      { success: false, error: 'Error while fetching movies', details: error.message },
       { status: 500 },
     )
   }

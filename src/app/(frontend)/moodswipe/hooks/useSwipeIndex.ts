@@ -10,9 +10,9 @@ export const useSwipeIndex = (movies: Movie[]) => {
   const movieColumns = useMemo(() => {
     if (!movies || movies.length === 0) return [[], [], []]
 
-    const leftColumn = movies.slice(0, 20)
-    const centerColumn = movies.slice(20, 40)
-    const rightColumn = movies.slice(40, 60)
+    const leftColumn = movies //.slice(0, 20)
+    const centerColumn = movies //.slice(20, 40)
+    const rightColumn = movies //.slice(40, 60)
 
     return [leftColumn, centerColumn, rightColumn]
   }, [movies])
