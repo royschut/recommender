@@ -7,6 +7,7 @@ interface SwipeContainerProps<T> {
   currentHorizontalIndex: number
   onVerticalIndexChange: (newIndex: number) => void
   onHorizontalIndexChange: (newIndex: number) => void
+  onSwipeStateChange?: (isSwipping: boolean) => void
   renderItem: (item: T, index: number, isActive: boolean) => React.ReactNode
   className?: string
   style?: React.CSSProperties
@@ -18,6 +19,7 @@ export function SwipeContainer<T>({
   currentHorizontalIndex,
   onVerticalIndexChange,
   onHorizontalIndexChange,
+  onSwipeStateChange,
   renderItem,
   className = '',
   style = {},
@@ -34,6 +36,7 @@ export function SwipeContainer<T>({
     setStartX(e.touches[0].clientX)
     setStartY(e.touches[0].clientY)
     setSwipeDirection(null)
+    onSwipeStateChange?.(true)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -89,6 +92,7 @@ export function SwipeContainer<T>({
     setVerticalDragOffset(0)
     setHorizontalDragOffset(0)
     setSwipeDirection(null)
+    onSwipeStateChange?.(false)
   }
 
   const handleMouseStart = (e: React.MouseEvent) => {
@@ -96,6 +100,7 @@ export function SwipeContainer<T>({
     setStartX(e.clientX)
     setStartY(e.clientY)
     setSwipeDirection(null)
+    onSwipeStateChange?.(true)
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -145,6 +150,7 @@ export function SwipeContainer<T>({
     setVerticalDragOffset(0)
     setHorizontalDragOffset(0)
     setSwipeDirection(null)
+    onSwipeStateChange?.(false)
   }
 
   React.useEffect(() => {

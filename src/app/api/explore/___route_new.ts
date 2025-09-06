@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
     if (!hasActiveWeights) {
       // No concept weights active - return random popular films
-      console.log('🎲 No active concept weights, returning random popular films...')
+      console.log('🎲 >>> No active concept weights, returning random popular films...')
 
       const randomResults = await qdrant.scroll(collectionName, {
         limit: limit * 2, // Get more to have variety
@@ -224,7 +224,7 @@ export async function GET(request: NextRequest) {
       })
       .filter(Boolean)
 
-    console.log(`✅ Found ${sortedMovies.length} films using concept-based search`)
+    console.log(`1 ✅ Found ${sortedMovies.length} films using concept-based search`)
 
     return NextResponse.json({
       success: true,

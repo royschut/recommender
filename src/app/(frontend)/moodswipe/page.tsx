@@ -5,23 +5,20 @@ import Image from 'next/image'
 import phoneImage from './assets/phone.png'
 import { Movie } from '../playground/components/MovieCard'
 import { SwipeContainer } from './components/SwipeContainer'
+import { SwipeIndicator } from './components/SwipeIndicator'
 
-const Playground = () => {
+const MoodSwipe = () => {
   const [currentVerticalIndex, setCurrentVerticalIndex] = React.useState(0)
-  const [currentHorizontalIndex, setCurrentHorizontalIndex] = React.useState(1) // Start in middle column
+  const [currentHorizontalIndex, setCurrentHorizontalIndex] = React.useState(1)
+  const [isSwipping, setIsSwipping] = React.useState(false)
 
   const suggestions = useQuery({
     queryKey: ['suggestions'],
     placeholderData: keepPreviousData,
     queryFn: async () => {
-      const requestBody = {
-        limit: 100,
-      }
-
-      return fetch('/api/explore', {
-        method: 'POST',
+      return fetch('/api/moodswipe', {
+        method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
       }).then((res) => res.json())
     },
   })
@@ -39,34 +36,6 @@ const Playground = () => {
     return [leftColumn, centerColumn, rightColumn]
   }, [movies])
 
-  const renderMovieItem = (movie: Movie, index: number, isActive: boolean) => (
-    <>
-      <img
-        src={movie.posterUrl}
-        alt={movie.title}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          pointerEvents: 'none',
-        }}
-      />
-      {isActive && (
-        <div className="absolute bottom-0 left-0 right-0 text-white pointer-events-none">
-          {/* Deeper gradient overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
-
-          <div className="relative p-4">
-            <h2 className="text-lg font-bold mb-2 drop-shadow-lg shadow-black">{movie.title}</h2>
-            <p className="text-sm opacity-90 drop-shadow-md shadow-black">
-              {movie.overview?.substring(0, 100)}...
-            </p>
-          </div>
-        </div>
-      )}
-    </>
-  )
-
   if (!movies || movies.length === 0) {
     return <div>Loading...</div>
   }
@@ -75,22 +44,86 @@ const Playground = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-100 p-8">
       <div className="relative">
         <Image src={phoneImage} alt="Phone mockup" width={390} height={844} className="block" />
-        <div
-          className="absolute bg-black rounded-[25px] overflow-hidden"
-          style={{ top: 15, right: 15, bottom: 15, left: 15, borderRadius: 25 }}
-        >
+        <div className="absolute inset-[15px] bg-black rounded-[25px] overflow-hidden">
           <SwipeContainer
             movieColumns={movieColumns}
             currentVerticalIndex={currentVerticalIndex}
             currentHorizontalIndex={currentHorizontalIndex}
             onVerticalIndexChange={setCurrentVerticalIndex}
             onHorizontalIndexChange={setCurrentHorizontalIndex}
-            renderItem={renderMovieItem}
+            onSwipeStateChange={setIsSwipping}
+            renderItem={(movie: Movie, index: number, isActive: boolean) => (
+              <>
+                <img
+                  src={movie.posterUrl}
+                  alt={movie.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    pointerEvents: 'none',
+                  }}
+                />
+                {isActive && (
+                  <div
+                    className={`absolute bottom-0 left-0 right-0 text-white pointer-events-none transition-opacity duration-300 ${
+                      !isSwipping ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+                    <div className="relative px-4 py-3 mb-[60px]">
+                      <h2
+                        className="text-lg font-bold mb-1"
+                        style={{
+                          filter:
+                            'drop-shadow(rgba(0,0,0,0.9) 1px 1px 2px) drop-shadow(rgba(0,0,0,0.7) 0px 0px 8px) drop-shadow(rgba(0,0,0,0.4) 0px 0px 20px)',
+                        }}
+                      >
+                        {movie.title}
+                      </h2>
+                      <p
+                        className="text-sm opacity-90 line-clamp-2"
+                        style={{
+                          filter:
+                            'drop-shadow(rgba(0,0,0,0.9) 1px 1px 2px) drop-shadow(rgba(0,0,0,0.7) 0px 0px 8px) drop-shadow(rgba(0,0,0,0.4) 0px 0px 20px)',
+                        }}
+                      >
+                        {movie.overview?.substring(0, 80)}...
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           />
+
+          <div
+            className={`transition-opacity duration-300 ${!isSwipping ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <SwipeIndicator
+              direction="down"
+              icon={
+                <div className="w-6 h-6 border-2 border-white/70 rounded flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white/70 rounded-full"></div>
+                </div>
+              }
+              label="Explore"
+            />
+            <SwipeIndicator
+              direction="left"
+              icon={<span className="text-xl">❤️</span>}
+              label="Romance"
+            />
+            <SwipeIndicator
+              direction="right"
+              icon={<span className="text-xl">🧸</span>}
+              label="Kid Friendly"
+            />
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-export default Playground
+export default MoodSwipe
