@@ -53,9 +53,55 @@ export async function POST(request: Request) {
       limit: movieIds.length,
     })
 
+    // Get mood scores for all movies using Qdrant's batch query
+    console.log(`🔍 Calculating mood scores for ${movies.docs.length} movies...`)
+
+    // Prepare batch queries - each movie point searches for moods
+    const batchQueries =
+      searchResults.points
+        ?.filter((point: any) => point.payload?.movieId)
+        .map((point: any) => ({
+          query: point.id, // Use point ID directly as query
+          filter: { must: [{ key: 'type', match: { value: 'mood' } }] },
+          limit: 100, // Should cover all moods
+          with_payload: true,
+        })) || []
+
+    console.log(`� Prepared ${batchQueries.length} batch queries for mood scoring`)
+
+    if (batchQueries.length === 0) {
+      console.log('⚠️  No valid movie points found for mood scoring')
+      return NextResponse.json({
+        success: true,
+        results: movies.docs.map((movie) => ({ ...movie, moodScores: {} })),
+        totalFound: movies.totalDocs,
+        excluded: excludedIds.length,
+      })
+    }
+
+    // Execute batch query to get mood similarities for all movies
+    const moodBatchResults = await qdrant.queryBatch(collectionName, {
+      searches: batchQueries,
+    })
+
+    // Add mood scores to movies
+    const moviesWithMoodScores = movies.docs.map((movie: any, index: number) => {
+      const moodResults = moodBatchResults[index]?.points || []
+      const moodScores: { [moodId: string]: number } = {}
+
+      moodResults.forEach((result: any) => {
+        const moodId = result.payload?.moodId as string
+        if (moodId) {
+          moodScores[moodId] = result.score
+        }
+      })
+
+      return { ...movie, moodScores }
+    })
+
     return NextResponse.json({
       success: true,
-      results: movies.docs,
+      results: moviesWithMoodScores,
       totalFound: movies.totalDocs,
       excluded: excludedIds.length,
     })
