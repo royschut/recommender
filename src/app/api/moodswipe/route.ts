@@ -54,45 +54,29 @@ export async function POST(request: Request) {
     })
 
     // Get mood scores for all movies using Qdrant's batch query
-    console.log(`🔍 Calculating mood scores for ${movies.docs.length} movies...`)
-
-    // Prepare batch queries - each movie point searches for moods
-    const batchQueries =
-      searchResults.points
-        ?.filter((point: any) => point.payload?.movieId)
-        .map((point: any) => ({
-          query: point.id, // Use point ID directly as query
-          filter: { must: [{ key: 'type', match: { value: 'mood' } }] },
-          limit: 100, // Should cover all moods
-          with_payload: true,
-        })) || []
-
-    console.log(`� Prepared ${batchQueries.length} batch queries for mood scoring`)
-
-    if (batchQueries.length === 0) {
-      console.log('⚠️  No valid movie points found for mood scoring')
-      return NextResponse.json({
-        success: true,
-        results: movies.docs.map((movie) => ({ ...movie, moodScores: {} })),
-        totalFound: movies.totalDocs,
-        excluded: excludedIds.length,
-      })
-    }
-
-    // Execute batch query to get mood similarities for all movies
     const moodBatchResults = await qdrant.queryBatch(collectionName, {
-      searches: batchQueries,
+      searches:
+        searchResults.points
+          ?.filter((point: any) => point.payload?.movieId)
+          .map((point: any) => ({
+            query: point.id,
+            filter: { must: [{ key: 'type', match: { value: 'mood' } }] },
+            limit: 100,
+            with_payload: true,
+          })) || [],
     })
 
     // Add mood scores to movies
     const moviesWithMoodScores = movies.docs.map((movie: any, index: number) => {
       const moodResults = moodBatchResults[index]?.points || []
-      const moodScores: { [moodId: string]: number } = {}
+      console.log('Mood batch results:', moodResults)
+      const moodScores: { [mood: string]: { score: number; title: string } } = {}
 
       moodResults.forEach((result: any) => {
         const moodId = result.payload?.moodId as string
+        const moodTitle = result.payload?.title as string
         if (moodId) {
-          moodScores[moodId] = result.score
+          moodScores[moodId] = { score: result.score, title: moodTitle }
         }
       })
 
