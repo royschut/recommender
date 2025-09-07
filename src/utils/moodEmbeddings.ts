@@ -19,11 +19,14 @@ export async function createMoodEmbedding(moodId: string, description: string) {
     encoding_format: 'float',
   })
 
+  // Generate numeric ID for Qdrant (similar to movie embeddings)
+  const numericId = Date.now() + Math.floor(Math.random() * 100000)
+
   await qdrant.upsert(COLLECTION_NAME, {
     wait: true,
     points: [
       {
-        id: moodId,
+        id: numericId,
         vector: response.data[0].embedding,
         payload: {
           type: 'mood',
@@ -35,7 +38,7 @@ export async function createMoodEmbedding(moodId: string, description: string) {
     ],
   })
 
-  return moodId
+  return String(numericId)
 }
 
 export async function updateMoodEmbedding(moodId: string, description: string) {
@@ -43,13 +46,29 @@ export async function updateMoodEmbedding(moodId: string, description: string) {
 }
 
 export async function deleteMoodEmbedding(moodId: string) {
-  await qdrant.delete(COLLECTION_NAME, {
-    wait: true,
-    points: [moodId],
+  // First find the point with this moodId in the payload
+  const searchResult = await qdrant.scroll(COLLECTION_NAME, {
+    filter: {
+      must: [
+        { key: 'type', match: { value: 'mood' } },
+        { key: 'moodId', match: { value: moodId } },
+      ],
+    },
+    with_payload: false,
+    with_vector: false,
+    limit: 1,
   })
+
+  if (searchResult.points && searchResult.points.length > 0) {
+    const pointId = searchResult.points[0].id
+    await qdrant.delete(COLLECTION_NAME, {
+      wait: true,
+      points: [pointId],
+    })
+  }
 }
 
-export async function ensureConceptVectorsCollection() {
+export async function ensureMovieEmbeddingsCollection() {
   try {
     await qdrant.getCollection(COLLECTION_NAME)
   } catch {

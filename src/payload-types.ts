@@ -214,7 +214,11 @@ export interface Favorite {
 export interface Mood {
   id: string;
   /**
-   * Description of the mood/concept
+   * Short title, preferably one word (e.g., "Happy", "Romantic")
+   */
+  title: string;
+  /**
+   * Description of the mood, concept or feeling
    */
   description: string;
   /**
@@ -373,6 +377,7 @@ export interface FavoritesSelect<T extends boolean = true> {
  * via the `definition` "moods_select".
  */
 export interface MoodsSelect<T extends boolean = true> {
+  title?: T;
   description?: T;
   qdrantId?: T;
   hasEmbedding?: T;

@@ -3,7 +3,7 @@ import {
   createMoodEmbedding,
   updateMoodEmbedding,
   deleteMoodEmbedding,
-  ensureConceptVectorsCollection,
+  ensureMovieEmbeddingsCollection,
 } from '../utils/moodEmbeddings'
 
 export const Moods: CollectionConfig = {
@@ -17,7 +17,7 @@ export const Moods: CollectionConfig = {
   hooks: {
     beforeChange: [
       async () => {
-        await ensureConceptVectorsCollection()
+        await ensureMovieEmbeddingsCollection()
       },
     ],
     afterChange: [
@@ -49,11 +49,19 @@ export const Moods: CollectionConfig = {
   },
   fields: [
     {
+      name: 'title',
+      type: 'text',
+      required: true,
+      admin: {
+        description: 'Short title, preferably one word (e.g., "Happy", "Romantic")',
+      },
+    },
+    {
       name: 'description',
       type: 'text',
       required: true,
       admin: {
-        description: 'Description of the mood/concept',
+        description: 'Description of the mood, concept or feeling',
       },
     },
     {
