@@ -12,7 +12,7 @@ const qdrant = new QdrantClient({
 
 const COLLECTION_NAME = 'movie-embeddings'
 
-export async function createMoodEmbedding(moodId: string, description: string) {
+export async function createMoodEmbedding(moodId: string, title: string, description: string) {
   const response = await openai.embeddings.create({
     model: 'text-embedding-3-small',
     input: description,
@@ -31,6 +31,7 @@ export async function createMoodEmbedding(moodId: string, description: string) {
         payload: {
           type: 'mood',
           moodId: moodId,
+          title: title,
           description: description,
           updatedAt: new Date().toISOString(),
         },
@@ -41,8 +42,8 @@ export async function createMoodEmbedding(moodId: string, description: string) {
   return String(numericId)
 }
 
-export async function updateMoodEmbedding(moodId: string, description: string) {
-  return createMoodEmbedding(moodId, description)
+export async function updateMoodEmbedding(moodId: string, title: string, description: string) {
+  return createMoodEmbedding(moodId, title, description)
 }
 
 export async function deleteMoodEmbedding(moodId: string) {

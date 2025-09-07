@@ -23,14 +23,17 @@ export const Moods: CollectionConfig = {
     afterChange: [
       async ({ req, doc, operation, previousDoc }) => {
         if (operation === 'create') {
-          const qdrantId = await createMoodEmbedding(doc.id, doc.description)
+          const qdrantId = await createMoodEmbedding(doc.id, doc.title, doc.description)
           await req.payload.update({
             collection: 'moods',
             id: doc.id,
             data: { qdrantId, hasEmbedding: true },
           })
-        } else if (operation === 'update' && previousDoc?.description !== doc.description) {
-          await updateMoodEmbedding(doc.id, doc.description)
+        } else if (
+          operation === 'update' &&
+          (previousDoc?.description !== doc.description || previousDoc?.title !== doc.title)
+        ) {
+          await updateMoodEmbedding(doc.id, doc.title, doc.description)
           if (!doc.hasEmbedding) {
             await req.payload.update({
               collection: 'moods',
