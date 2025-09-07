@@ -12,39 +12,54 @@ const qdrant = new QdrantClient({
 
 const COLLECTION_NAME = 'movie-embeddings'
 
-export async function createMoodEmbedding(moodId: string, title: string, description: string) {
+export async function upsertMoodEmbedding(moodId: string, title: string, description: string) {
+  const searchResult = await qdrant.scroll(COLLECTION_NAME, {
+    filter: {
+      must: [
+        { key: 'type', match: { value: 'mood' } },
+        { key: 'moodId', match: { value: moodId } },
+      ],
+    },
+    with_payload: false,
+    with_vector: false,
+    limit: 1,
+  })
+
+  const pointId =
+    searchResult.points?.length > 0
+      ? searchResult.points[0].id
+      : Date.now() + Math.floor(Math.random() * 100000)
+
   const response = await openai.embeddings.create({
     model: 'text-embedding-3-small',
     input: description,
     encoding_format: 'float',
   })
 
-  // Generate numeric ID for Qdrant (similar to movie embeddings)
-  const numericId = Date.now() + Math.floor(Math.random() * 100000)
+  console.log('Embedding', title)
 
   await qdrant.upsert(COLLECTION_NAME, {
     wait: true,
     points: [
       {
-        id: numericId,
+        id: pointId,
         vector: response.data[0].embedding,
         payload: {
           type: 'mood',
-          moodId: moodId,
-          title: title,
-          description: description,
+          moodId,
+          title,
+          description,
           updatedAt: new Date().toISOString(),
         },
       },
     ],
   })
 
-  return String(numericId)
+  return String(pointId)
 }
 
-export async function updateMoodEmbedding(moodId: string, title: string, description: string) {
-  return createMoodEmbedding(moodId, title, description)
-}
+export const createMoodEmbedding = upsertMoodEmbedding
+export const updateMoodEmbedding = upsertMoodEmbedding
 
 export async function deleteMoodEmbedding(moodId: string) {
   // First find the point with this moodId in the payload
@@ -67,6 +82,28 @@ export async function deleteMoodEmbedding(moodId: string) {
       points: [pointId],
     })
   }
+}
+
+export async function deleteAllMoodEmbeddings() {
+  const scrollResult = await qdrant.scroll(COLLECTION_NAME, {
+    filter: { must: [{ key: 'type', match: { value: 'mood' } }] },
+    with_payload: false,
+    with_vector: false,
+    limit: 1000,
+  })
+
+  if (scrollResult.points && scrollResult.points.length > 0) {
+    const pointIds = scrollResult.points.map((point) => point.id)
+
+    await qdrant.delete(COLLECTION_NAME, {
+      wait: true,
+      points: pointIds,
+    })
+
+    return pointIds.length
+  }
+
+  return 0
 }
 
 export async function ensureMovieEmbeddingsCollection() {
