@@ -121,7 +121,7 @@ export async function POST(request: Request) {
           })) || [],
     })
 
-    // Add mood scores to movies
+    // Add mood scores and suggestions to movies
     const moviesWithMoodScores = movies.docs.map((movie: any, index: number) => {
       const moodResults = moodBatchResults[index]?.points || []
       const moodScores: { [mood: string]: { score: number; title: string } } = {}
@@ -135,7 +135,20 @@ export async function POST(request: Request) {
         }
       })
 
-      return { ...movie, moodScores }
+      // Calculate mood suggestions
+      const moodEntries = Object.entries(moodScores).map(([id, data]) => ({
+        id,
+        ...data,
+      }))
+
+      moodEntries.sort((a, b) => b.score - a.score)
+
+      const moodSuggestions = {
+        similar: moodEntries[0] || null,
+        contrasting: moodEntries[moodEntries.length - 1] || null,
+      }
+
+      return { ...movie, moodScores, moodSuggestions }
     })
 
     return NextResponse.json({
