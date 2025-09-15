@@ -3,165 +3,168 @@ import { QdrantClient } from '@qdrant/js-client-rest'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 
-const qdrant = new QdrantClient({
-  url: process.env.QDRANT_URL,
-  apiKey: process.env.QDRANT_API_KEY,
-})
+const qdrant = new QdrantClient({ url: process.env.QDRANT_URL, apiKey: process.env.QDRANT_API_KEY })
+const COLLECTION = 'movie-embeddings'
 
-// Util function to explore mood vectors
-async function exploreMoodVectors() {
+const normalize = (vector: number[]) => {
+  const length = Math.hypot(...vector)
+  return length ? vector.map((x) => x / length) : vector
+}
+const combineVectors = (movieVector: number[], moodVector: number[], movieWeight = 0.7) =>
+  normalize(movieVector.map((x, i) => x * movieWeight + moodVector[i] * (1 - movieWeight)))
+
+export async function POST(req: Request) {
   try {
-    console.log('🔍 Exploring mood vectors in movie-embeddings collection...')
+    const { excluded = [] } = await req.json()
 
-    const info = await qdrant.getCollection('movie-embeddings')
-    console.log(JSON.stringify(info?.config?.params?.vectors, null, 2))
-
-    // Get all mood vectors (type='mood')
-    const moodPoints = await qdrant.scroll('movie-embeddings', {
-      filter: {
-        must: [{ key: 'type', match: { value: 'mood' } }],
-      },
+    // 1) Random movies
+    const { points: movies = [] } = await qdrant.query(COLLECTION, {
+      query: { sample: 'random' },
+      filter: excluded.length
+        ? { must_not: [{ key: 'movieId', match: { any: excluded } }] }
+        : undefined,
       with_payload: true,
       with_vector: true,
-      limit: 100,
+      limit: 10,
     })
 
-    console.log(`📄 Found ${moodPoints.points?.length || 0} mood vectors`)
+    if (!movies.length) return NextResponse.json({ success: true, results: [], totalFound: 0 })
 
-    if (moodPoints.points && moodPoints.points.length > 0) {
-      console.log('🏷️ Mood vectors:')
-      moodPoints.points.forEach((point, index) => {
-        console.log(`Mood ${index + 1}:`, {
-          id: point.id,
-          moodId: point.payload?.moodId,
-          description: point.payload?.description,
-          updatedAt: point.payload?.updatedAt,
-        })
-        if (index === 0) {
-          console.log('First mood vector payload:', point.vector)
-        }
-      })
+    const movieIds = movies.map((movie) => movie.payload?.movieId).filter(Boolean)
+    const pointByMovieId = new Map(movieIds.map((id, index) => [id, movies[index]]))
 
-      // Analyze payload structure
-      const payloadKeys = new Set()
-      moodPoints.points.forEach((point) => {
-        if (point.payload) {
-          Object.keys(point.payload).forEach((key) => payloadKeys.add(key))
-        }
-      })
-      console.log('🔑 Mood payload keys:', Array.from(payloadKeys))
-    }
-
-    return moodPoints.points
-  } catch (error: any) {
-    console.error('❌ Error exploring mood vectors:', error)
-    return null
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    // Test: explore mood vectors
-    // await exploreMoodVectors()
-
-    const body = await request.json()
-    const excludedIds = body.excluded || []
-    const collectionName = 'movie-embeddings'
-
-    const queryOptions: any = {
-      query: { sample: 'random' },
-      with_payload: true,
-      with_vector: false,
-      limit: 10,
-    }
-
-    // Only add filter if there are excluded IDs
-    if (excludedIds.length > 0) {
-      queryOptions.filter = {
-        must_not: [{ key: 'movieId', match: { any: excludedIds } }],
-      }
-    }
-
-    const searchResults = await qdrant.query(collectionName, queryOptions)
-
-    if (!searchResults.points?.length) {
-      return NextResponse.json({
-        success: true,
-        results: [],
-        totalFound: 0,
-        method: 'random_sample',
-        excluded: excludedIds.length,
-      })
-    }
-
-    const payloadConfig = await config
-    const payload = await getPayload({ config: payloadConfig })
-
-    const movieIds = searchResults.points
-      .map((point: any) => point.payload?.movieId)
-      .filter(Boolean)
-
-    const movies = await payload.find({
+    // 2) Movie docs
+    const payload = await getPayload({ config: await config })
+    const movieDocs = await payload.find({
       collection: 'movies',
       where: { id: { in: movieIds } },
       limit: movieIds.length,
     })
+    const movieDocById = new Map(movieDocs.docs.map((doc: any) => [doc.id, doc]))
 
-    // Get mood scores for all movies using Qdrant's batch query
-    const moodBatchResults = await qdrant.queryBatch(collectionName, {
-      searches:
-        searchResults.points
-          ?.filter((point: any) => point.payload?.movieId)
-          .map((point: any) => ({
-            query: point.id,
-            filter: { must: [{ key: 'type', match: { value: 'mood' } }] },
-            limit: 24,
-            with_payload: true,
-            search_params: { exact: true },
-          })) || [],
+    // 3) Moods
+    const moodBatch = await qdrant.queryBatch(COLLECTION, {
+      searches: movies.map((movie) => ({
+        query: movie.vector as number[],
+        filter: { must: [{ key: 'type', match: { value: 'mood' } }] },
+        limit: 24,
+        with_payload: true,
+        with_vector: true,
+      })),
     })
 
-    // Add mood scores and suggestions to movies
-    const moviesWithMoodScores = movies.docs.map((movie: any, index: number) => {
-      const moodResults = moodBatchResults[index]?.points || []
-      const moodScores: { [mood: string]: { score: number; title: string } } = {}
+    // 4) Combine per movie
+    const moviesWithSuggestions = movieIds.map((movieId, index) => {
+      const movieVector = pointByMovieId.get(movieId)?.vector as number[]
+      const moods = (moodBatch[index]?.points ?? [])
+        .map((m) => ({
+          id: m.payload?.moodId,
+          title: m.payload?.title || m.payload?.description || 'Unknown',
+          score: m.score!,
+          vector: m.vector as number[],
+        }))
+        .filter((x) => x.id && x.vector)
+        .sort((a, b) => b.score - a.score)
 
-      moodResults.forEach((result: any) => {
-        const moodId = result.payload?.moodId as string
-        const moodTitle =
-          (result.payload?.title as string) || (result.payload?.description as string) || 'Unknown'
-        if (moodId) {
-          moodScores[moodId] = { score: result.score, title: moodTitle }
-        }
-      })
+      const bestMood = moods[0]
+      const worstMood = moods[moods.length - 1]
 
-      // Calculate mood suggestions
-      const moodEntries = Object.entries(moodScores).map(([id, data]) => ({
-        id,
-        ...data,
-      }))
+      const similarSuggestion = bestMood
+        ? { ...bestMood, combinedVector: combineVectors(movieVector, bestMood.vector) }
+        : undefined
+      const contrastingSuggestion =
+        worstMood && (!bestMood || worstMood.id !== bestMood.id)
+          ? { ...worstMood, combinedVector: combineVectors(movieVector, worstMood.vector) }
+          : undefined
 
-      moodEntries.sort((a, b) => b.score - a.score)
-
-      const moodSuggestions = {
-        similar: moodEntries[0] || null,
-        contrasting: moodEntries[moodEntries.length - 1] || null,
+      return {
+        movieId,
+        doc: movieDocById.get(movieId) ?? { id: movieId },
+        similarSuggestion,
+        contrastingSuggestion,
       }
+    })
 
-      return { ...movie, moodScores, moodSuggestions }
+    // 5) Batch recommendations
+    const recommendationSearches = moviesWithSuggestions.flatMap(
+      (item) =>
+        [
+          item.similarSuggestion && {
+            query: item.similarSuggestion.combinedVector,
+            kind: 'similar',
+            movieId: item.movieId,
+          },
+          item.contrastingSuggestion && {
+            query: item.contrastingSuggestion.combinedVector,
+            kind: 'contrasting',
+            movieId: item.movieId,
+          },
+        ].filter(Boolean) as Array<{
+          query: number[]
+          kind: 'similar' | 'contrasting'
+          movieId: string
+        }>,
+    )
+
+    const recommendationBatch = recommendationSearches.length
+      ? await qdrant.queryBatch(COLLECTION, {
+          searches: recommendationSearches.map((s) => ({
+            query: s.query,
+            filter: {
+              must_not: [
+                { key: 'type', match: { value: 'mood' } },
+                { key: 'movieId', match: { value: s.movieId } },
+              ],
+            },
+            limit: 5,
+            with_payload: true,
+          })),
+        })
+      : []
+
+    const recommendationsByMovie = new Map<string, { similar?: any[]; contrasting?: any[] }>()
+    recommendationSearches.forEach((search, i) => {
+      const movies = (recommendationBatch[i]?.points ?? []).map((p) => ({
+        id: p.payload?.movieId,
+        title: p.payload?.title,
+        score: p.score,
+      }))
+      const entry = recommendationsByMovie.get(search.movieId) ?? {}
+      entry[search.kind] = movies
+      recommendationsByMovie.set(search.movieId, entry)
+    })
+
+    // 6) Final output
+    const results = moviesWithSuggestions.map((item) => {
+      const recs = recommendationsByMovie.get(item.movieId) ?? {}
+      const moodSuggestions: any = {}
+      if (item.similarSuggestion) {
+        moodSuggestions.similar = {
+          id: item.similarSuggestion.id,
+          title: item.similarSuggestion.title,
+          score: item.similarSuggestion.score,
+          recommendedMovies: recs.similar ?? [],
+        }
+      }
+      if (item.contrastingSuggestion) {
+        moodSuggestions.contrasting = {
+          id: item.contrastingSuggestion.id,
+          title: item.contrastingSuggestion.title,
+          score: item.contrastingSuggestion.score,
+          recommendedMovies: recs.contrasting ?? [],
+        }
+      }
+      return { ...(item.doc as any), moodSuggestions }
     })
 
     return NextResponse.json({
       success: true,
-      results: moviesWithMoodScores,
-      totalFound: movies.totalDocs,
-      excluded: excludedIds.length,
+      results,
+      totalFound: movieDocs.totalDocs ?? results.length,
+      excluded: excluded.length,
     })
-  } catch (error: any) {
-    console.error('❌ MoodSwipe POST API error:', error)
-    return NextResponse.json(
-      { success: false, error: 'Error while fetching movies', details: error.message },
-      { status: 500 },
-    )
+  } catch (e: any) {
+    console.error('❌ Mood API error:', e)
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 })
   }
 }
