@@ -45,10 +45,9 @@ const MoodSwipe = () => {
 
   console.log(movies, movieColumns, xIndex, yIndex)
 
-  return (
-    <div className="bg-gray-900">
-      {/* Mobile: fullscreen */}
-      <div className="md:hidden relative min-h-dvh">
+  const main = () => {
+    return (
+      <>
         <div {...dragHandlers} className="absolute inset-0">
           <SwipeContainer
             movieColumns={movieColumns}
@@ -92,7 +91,14 @@ const MoodSwipe = () => {
             />
           </div>
         </div>
-      </div>
+      </>
+    )
+  }
+
+  return (
+    <div className="bg-gray-900">
+      {/* Mobile: fullscreen */}
+      <div className="md:hidden relative min-h-dvh">{main()}</div>
 
       {/* Desktop: phone mock + arrow keys */}
       <div className="hidden md:flex justify-center items-center min-h-screen p-8">
@@ -107,42 +113,7 @@ const MoodSwipe = () => {
               priority
             />
             <div className="absolute inset-[15px] bg-black rounded-[25px] overflow-hidden">
-              <div {...dragHandlers}>
-                <SwipeContainer
-                  movieColumns={movieColumns}
-                  currentVerticalIndex={yIndex}
-                  currentHorizontalIndex={xIndex}
-                  verticalDragOffset={verticalDragOffset}
-                  horizontalDragOffset={horizontalDragOffset}
-                  renderItem={(movie: Movie, isActive: boolean) => (
-                    <MovieCard movie={movie} isActive={isActive} isSwipping={isSwipping} />
-                  )}
-                />
-              </div>
-
-              <div
-                className={`transition-opacity duration-300 ${!isSwipping ? 'opacity-100' : 'opacity-0'}`}
-              >
-                <SwipeIndicator
-                  direction="down"
-                  icon={
-                    <div className="w-6 h-6 border-2 border-white/70 rounded flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white/70 rounded-full" />
-                    </div>
-                  }
-                  label="Explore"
-                />
-                <SwipeIndicator
-                  direction="left"
-                  icon={<span className="text-xl">❤️</span>}
-                  label="Romance"
-                />
-                <SwipeIndicator
-                  direction="right"
-                  icon={<span className="text-xl">🧸</span>}
-                  label="Kid Friendly"
-                />
-              </div>
+              {main()}
             </div>
           </div>
 
