@@ -30,10 +30,9 @@ export async function POST(req: Request) {
 
     if (!movies.length) return NextResponse.json({ success: true, results: [], totalFound: 0 })
 
-    const movieIds = movies.map((movie) => movie.payload?.movieId).filter(Boolean)
+    const movieIds = movies.map((movie) => movie.payload?.movieId as string).filter(Boolean)
     const pointByMovieId = new Map(movieIds.map((id, index) => [id, movies[index]]))
 
-    // 2) Movie docs
     const payload = await getPayload({ config: await config })
     const movieDocs = await payload.find({
       collection: 'movies',
@@ -42,7 +41,7 @@ export async function POST(req: Request) {
     })
     const movieDocById = new Map(movieDocs.docs.map((doc: any) => [doc.id, doc]))
 
-    // 3) Moods
+    // 2) Get Moods
     const moodBatch = await qdrant.queryBatch(COLLECTION, {
       searches: movies.map((movie) => ({
         query: movie.vector as number[],
@@ -53,7 +52,7 @@ export async function POST(req: Request) {
       })),
     })
 
-    // 4) Combine per movie
+    // 3) Combine per movie
     const moviesWithSuggestions = movieIds.map((movieId, index) => {
       const movieVector = pointByMovieId.get(movieId)?.vector as number[]
       const moods = (moodBatch[index]?.points ?? [])
@@ -122,13 +121,43 @@ export async function POST(req: Request) {
         })
       : []
 
+    // Collect all recommended movie IDs for batch fetching
+    const allRecommendedMovieIds = new Set<string>()
+    recommendationSearches.forEach((search, i) => {
+      const movieIds = (recommendationBatch[i]?.points ?? [])
+        .map((p) => p.payload?.movieId as string)
+        .filter(Boolean)
+      movieIds.forEach((id) => allRecommendedMovieIds.add(id))
+    })
+
+    // Fetch full movie documents for all recommended movies
+    const recommendedMovieDocs =
+      allRecommendedMovieIds.size > 0
+        ? await payload.find({
+            collection: 'movies',
+            where: { id: { in: Array.from(allRecommendedMovieIds) } },
+            limit: allRecommendedMovieIds.size,
+          })
+        : { docs: [] }
+    const recommendedMovieDocById = new Map(
+      recommendedMovieDocs.docs.map((doc: any) => [doc.id, doc]),
+    )
+
     const recommendationsByMovie = new Map<string, { similar?: any[]; contrasting?: any[] }>()
     recommendationSearches.forEach((search, i) => {
-      const movies = (recommendationBatch[i]?.points ?? []).map((p) => ({
-        id: p.payload?.movieId,
-        title: p.payload?.title,
-        score: p.score,
-      }))
+      const movies = (recommendationBatch[i]?.points ?? []).map((p) => {
+        const movieDoc = recommendedMovieDocById.get(p.payload?.movieId)
+        return movieDoc
+          ? {
+              ...movieDoc,
+              score: p.score,
+            }
+          : {
+              id: p.payload?.movieId,
+              title: p.payload?.title || 'Unknown',
+              score: p.score,
+            }
+      })
       const entry = recommendationsByMovie.get(search.movieId) ?? {}
       entry[search.kind] = movies
       recommendationsByMovie.set(search.movieId, entry)
