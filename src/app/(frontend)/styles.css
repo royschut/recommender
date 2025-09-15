@@ -22,6 +22,20 @@ body,
   height: 100%;
 }
 
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
+
 body {
   font-family: system-ui;
   font-size: 18px;
