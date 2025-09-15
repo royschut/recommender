@@ -3,19 +3,41 @@ import { SwipeDirection } from '../page'
 import { Movie } from '../Movie'
 
 export const useSwipeIndex = (movies: Movie[]) => {
-  const [xIndex, setXIndex] = useState(1) // Start at center column
+  const [xIndex, setXIndex] = useState(1)
   const [yIndex, setYIndex] = useState(0)
+  const [lastCenterIndex, setLastCenterIndex] = useState(0)
 
-  // Split movies into 3 arrays of 20 each
+  // Build movie columns dynamically based on current movie and its mood suggestions
   const movieColumns = useMemo(() => {
     if (!movies || movies.length === 0) return [[], [], []]
 
-    const leftColumn = movies //.slice(0, 20)
-    const centerColumn = movies //.slice(20, 40)
-    const rightColumn = movies //.slice(40, 60)
+    const centerColumn = movies
+
+    const referenceIndex = xIndex === 1 ? yIndex : lastCenterIndex
+    const currentCenterMovie = movies[referenceIndex] || movies[0]
+
+    const similarMovies = currentCenterMovie?.moodSuggestions?.similar?.recommendedMovies || []
+    const contrastingMovies =
+      currentCenterMovie?.moodSuggestions?.contrasting?.recommendedMovies || []
+
+    const leftColumn =
+      similarMovies.length > 0
+        ? Array.from(
+            { length: movies.length * 2 },
+            (_, i) => similarMovies[i % similarMovies.length],
+          )
+        : []
+
+    const rightColumn =
+      contrastingMovies.length > 0
+        ? Array.from(
+            { length: movies.length * 2 },
+            (_, i) => contrastingMovies[i % contrastingMovies.length],
+          )
+        : []
 
     return [leftColumn, centerColumn, rightColumn]
-  }, [movies])
+  }, [movies, yIndex, lastCenterIndex, xIndex])
 
   const handleSwipe = (direction: SwipeDirection) => {
     const currentColumn = movieColumns[xIndex]
@@ -32,13 +54,21 @@ export const useSwipeIndex = (movies: Movie[]) => {
         }
         break
       case 'left':
-        if (xIndex > 0) {
-          setXIndex(xIndex - 1)
+        if (xIndex === 1 && movieColumns[0].length > 0) {
+          setLastCenterIndex(yIndex)
+          setXIndex(0)
+        } else if (xIndex === 2) {
+          setXIndex(1)
+          setYIndex(lastCenterIndex)
         }
         break
       case 'right':
-        if (xIndex < movieColumns.length - 1) {
-          setXIndex(xIndex + 1)
+        if (xIndex === 1 && movieColumns[2].length > 0) {
+          setLastCenterIndex(yIndex)
+          setXIndex(2)
+        } else if (xIndex === 0) {
+          setXIndex(1)
+          setYIndex(lastCenterIndex)
         }
         break
     }
@@ -48,6 +78,6 @@ export const useSwipeIndex = (movies: Movie[]) => {
     xIndex,
     yIndex,
     handleSwipe,
-    movieColumns: [[], movies, []],
+    movieColumns,
   }
 }

@@ -79,12 +79,27 @@ const MoodSwipe = () => {
             />
           </div>
           <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            <SwipeIndicator direction="left" label={movie?.moodSuggestions?.similar.title || ''} />
+            <SwipeIndicator
+              direction="left"
+              label={
+                xIndex === 1
+                  ? movies[yIndex]?.moodSuggestions?.similar.title || ''
+                  : xIndex === 2
+                    ? 'Back'
+                    : ''
+              }
+            />
           </div>
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <SwipeIndicator
               direction="right"
-              label={movie?.moodSuggestions?.contrasting.title || ''}
+              label={
+                xIndex === 1
+                  ? movies[yIndex]?.moodSuggestions?.contrasting.title || ''
+                  : xIndex === 0
+                    ? 'Back'
+                    : ''
+              }
             />
           </div>
         </div>
@@ -120,12 +135,20 @@ const MoodSwipe = () => {
               <ArrowKey
                 direction="left"
                 onClick={() => handleSwipe('left')}
-                disabled={xIndex <= 0}
+                disabled={
+                  xIndex === 0 ||
+                  (xIndex === 1 &&
+                    !movies[yIndex]?.moodSuggestions?.similar?.recommendedMovies?.length)
+                }
               />
               <ArrowKey
                 direction="right"
                 onClick={() => handleSwipe('right')}
-                disabled={xIndex >= movieColumns.length - 1}
+                disabled={
+                  xIndex === 2 ||
+                  (xIndex === 1 &&
+                    !movies[yIndex]?.moodSuggestions?.contrasting?.recommendedMovies?.length)
+                }
               />
             </div>
             <ArrowKey
