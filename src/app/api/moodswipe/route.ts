@@ -10,8 +10,15 @@ const normalize = (vector: number[]) => {
   const length = Math.hypot(...vector)
   return length ? vector.map((x) => x / length) : vector
 }
-const combineVectors = (movieVector: number[], moodVector: number[], movieWeight = 0.7) =>
+
+const combineVectors = (movieVector: number[], moodVector: number[], movieWeight = 0.5) =>
   normalize(movieVector.map((x, i) => x * movieWeight + moodVector[i] * (1 - movieWeight)))
+
+const combineSimilarVectors = (movieVector: number[], moodVector: number[]) =>
+  combineVectors(movieVector, moodVector, 0.5)
+
+const combineContrastingVectors = (movieVector: number[], moodVector: number[]) =>
+  combineVectors(movieVector, moodVector, 0.2)
 
 export async function POST(req: Request) {
   try {
@@ -69,11 +76,14 @@ export async function POST(req: Request) {
       const worstMood = moods[moods.length - 1]
 
       const similarSuggestion = bestMood
-        ? { ...bestMood, combinedVector: combineVectors(movieVector, bestMood.vector) }
+        ? { ...bestMood, combinedVector: combineSimilarVectors(movieVector, bestMood.vector) }
         : undefined
       const contrastingSuggestion =
         worstMood && (!bestMood || worstMood.id !== bestMood.id)
-          ? { ...worstMood, combinedVector: combineVectors(movieVector, worstMood.vector) }
+          ? {
+              ...worstMood,
+              combinedVector: combineContrastingVectors(movieVector, worstMood.vector),
+            }
           : undefined
 
       return {
