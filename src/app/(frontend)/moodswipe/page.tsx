@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react'
 import Image from 'next/image'
 import phoneImage from './assets/phone.png'
-import { Movie } from '../playground/components/MovieCard'
 import { SwipeContainer } from './components/SwipeContainer'
 import { SwipeIndicator } from './components/SwipeIndicator'
 import { ArrowKey } from './components/ArrowKey'
@@ -11,6 +10,7 @@ import { useMovies } from './hooks/useMovies'
 import { useSwipeIndex } from './hooks/useSwipeIndex'
 import { useKeyListeners } from './hooks/useKeyListeners'
 import { useDragListeners } from './hooks/useDragListeners'
+import { Movie } from './Movie'
 
 export type SwipeDirection = 'up' | 'down' | 'left' | 'right'
 
@@ -22,6 +22,8 @@ const MoodSwipe = () => {
   useKeyListeners(handleSwipe)
   const { verticalDragOffset, horizontalDragOffset, isSwipping, dragHandlers } =
     useDragListeners(handleSwipe)
+
+  const movie = movieColumns[xIndex]?.[yIndex]
 
   // Load more movies when we're getting close to the end
   useEffect(() => {
@@ -43,7 +45,7 @@ const MoodSwipe = () => {
     return <div>Loading...</div>
   }
 
-  console.log(movies, movieColumns, xIndex, yIndex)
+  console.log({ movieColumns, xIndex, yIndex, sugg: movie?.moodSuggestions })
 
   const main = () => {
     return (
@@ -65,7 +67,7 @@ const MoodSwipe = () => {
             !isSwipping ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <div className="absolute top-16 left-1/2 -translate-x-1/2">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
             <SwipeIndicator
               direction="down"
               icon={
@@ -73,21 +75,16 @@ const MoodSwipe = () => {
                   <div className="w-2.5 h-2.5 bg-white/70 rounded-full" />
                 </div>
               }
-              label="Explore"
+              label={'Explore'}
             />
           </div>
           <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            <SwipeIndicator
-              direction="left"
-              icon={<span className="text-2xl">❤️</span>}
-              label="Romance"
-            />
+            <SwipeIndicator direction="left" label={movie?.moodSuggestions?.similar.title || ''} />
           </div>
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <SwipeIndicator
               direction="right"
-              icon={<span className="text-2xl">🧸</span>}
-              label="Kid Friendly"
+              label={movie?.moodSuggestions?.contrasting.title || ''}
             />
           </div>
         </div>

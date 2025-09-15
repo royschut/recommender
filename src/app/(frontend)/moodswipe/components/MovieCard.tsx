@@ -1,5 +1,5 @@
 import React from 'react'
-import { Movie } from '../../playground/components/MovieCard'
+import { Movie } from '../Movie'
 
 interface MovieCardProps {
   movie: Movie

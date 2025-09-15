@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
-import { Movie } from '../../playground/components/MovieCard'
 import { SwipeDirection } from '../page'
+import { Movie } from '../Movie'
 
 export const useSwipeIndex = (movies: Movie[]) => {
   const [xIndex, setXIndex] = useState(1) // Start at center column

@@ -2,7 +2,7 @@ import React from 'react'
 
 interface SwipeIndicatorProps {
   direction: 'up' | 'down' | 'left' | 'right'
-  icon: React.ReactNode
+  icon?: React.ReactNode
   label: string
   className?: string
 }

@@ -1,5 +1,5 @@
 import { useInfiniteQuery, InfiniteData } from '@tanstack/react-query'
-import type { Movie } from '../../playground/components/MovieCard'
+import { Movie } from '../Movie'
 
 interface Page {
   results: Movie[]
