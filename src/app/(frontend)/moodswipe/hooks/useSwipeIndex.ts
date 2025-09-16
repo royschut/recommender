@@ -2,7 +2,10 @@ import { useState, useMemo } from 'react'
 import { SwipeDirection } from '../page'
 import { Movie } from '../Movie'
 
-export const useSwipeIndex = (movies: Movie[]) => {
+export const useSwipeIndex = (
+  movies: Movie[],
+  onUserAction?: (movieId: string, action: 'like' | 'dislike') => void,
+) => {
   const [xIndex, setXIndex] = useState(1)
   const [yIndex, setYIndex] = useState(0)
   const [lastCenterIndex, setLastCenterIndex] = useState(0)
@@ -51,6 +54,10 @@ export const useSwipeIndex = (movies: Movie[]) => {
         break
       case 'left':
         if (xIndex === 1 && movieColumns[0].length > 0) {
+          const currentMovie = movieColumns[1][yIndex]
+          if (currentMovie && onUserAction) {
+            onUserAction(String(currentMovie.id), 'dislike')
+          }
           setLastCenterIndex(yIndex)
           setXIndex(0)
         } else if (xIndex === 2) {
@@ -60,6 +67,10 @@ export const useSwipeIndex = (movies: Movie[]) => {
         break
       case 'right':
         if (xIndex === 1 && movieColumns[2].length > 0) {
+          const currentMovie = movieColumns[1][yIndex]
+          if (currentMovie && onUserAction) {
+            onUserAction(String(currentMovie.id), 'like')
+          }
           setLastCenterIndex(yIndex)
           setXIndex(2)
         } else if (xIndex === 0) {

@@ -1,4 +1,5 @@
 import { useInfiniteQuery, InfiniteData } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Movie } from '../Movie'
 
 interface Page {
@@ -9,7 +10,19 @@ interface PageParam {
   excluded: string[]
 }
 
+interface UserAction {
+  movieId: string
+  action: 'like' | 'dislike'
+}
+
 export function useMovies(enabled = true) {
+  const [userProfile, setUserProfile] = useState<UserAction[]>([])
+
+  const onUserAction = (movieId: string, action: 'like' | 'dislike') => {
+    const swipeAction: UserAction = { movieId, action }
+    setUserProfile((prev) => [...prev, swipeAction])
+    console.log('📝 Swipe geregistreerd:', swipeAction)
+  }
   const query = useInfiniteQuery<Page, Error, InfiniteData<Page>, string[], PageParam>({
     queryKey: ['suggestions'],
     enabled,
@@ -30,12 +43,5 @@ export function useMovies(enabled = true) {
     refetchOnMount: false,
   })
 
-  const fetchNested = (direction: 'left' | 'right') => {
-    console.log('📡 Callback ontvangen', direction)
-  }
-
-  return {
-    ...query,
-    fetchNested,
-  }
+  return { ...query, onUserAction }
 }
