@@ -3,7 +3,6 @@ import { SwipeDirection } from '../page'
 
 export const useDragListeners = (onSwipe: (direction: SwipeDirection) => void) => {
   const [verticalDragOffset, setVerticalDragOffset] = useState(0)
-  const [horizontalDragOffset, setHorizontalDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
 
   const [startX, setStartX] = useState(0)
@@ -13,36 +12,23 @@ export const useDragListeners = (onSwipe: (direction: SwipeDirection) => void) =
   const resetDragState = useCallback(() => {
     setIsDragging(false)
     setVerticalDragOffset(0)
-    setHorizontalDragOffset(0)
     setSwipeDirection(null)
   }, [])
 
   const handleMove = useCallback(
-    (currentX: number, currentY: number) => {
+    (_currentX: number, currentY: number) => {
       if (!isDragging) return
 
-      const diffX = currentX - startX
       const diffY = currentY - startY
 
-      // Determine swipe direction on first significant movement
-      if (!swipeDirection && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
-        if (Math.abs(diffX) > Math.abs(diffY)) {
-          // Horizontal swipe - determine left or right
-          setSwipeDirection(diffX > 0 ? 'left' : 'right')
-        } else {
-          // Vertical swipe - determine up or down
-          setSwipeDirection(diffY > 0 ? 'up' : 'down')
-        }
+      // Only detect vertical swipes
+      if (!swipeDirection && Math.abs(diffY) > 10) {
+        // Vertical swipe - determine up or down
+        setSwipeDirection(diffY > 0 ? 'down' : 'up')
       }
 
-      // Update offset based on direction
-      if (swipeDirection === 'left' || swipeDirection === 'right') {
-        setHorizontalDragOffset(diffX)
-        setVerticalDragOffset(0)
-      } else if (swipeDirection === 'up' || swipeDirection === 'down') {
-        setVerticalDragOffset(diffY)
-        setHorizontalDragOffset(0)
-      }
+      // Only update vertical offset for all directions
+      setVerticalDragOffset(diffY)
     },
     [isDragging, startX, startY, swipeDirection],
   )
@@ -50,22 +36,12 @@ export const useDragListeners = (onSwipe: (direction: SwipeDirection) => void) =
   const handleDragEnd = useCallback(() => {
     const threshold = 50
 
-    if (
-      swipeDirection &&
-      (swipeDirection === 'left' || swipeDirection === 'right') &&
-      Math.abs(horizontalDragOffset) > threshold
-    ) {
-      onSwipe(swipeDirection)
-    } else if (
-      swipeDirection &&
-      (swipeDirection === 'up' || swipeDirection === 'down') &&
-      Math.abs(verticalDragOffset) > threshold
-    ) {
+    if (swipeDirection && Math.abs(verticalDragOffset) > threshold) {
       onSwipe(swipeDirection)
     }
 
     resetDragState()
-  }, [swipeDirection, horizontalDragOffset, verticalDragOffset, onSwipe, resetDragState])
+  }, [swipeDirection, verticalDragOffset, onSwipe, resetDragState])
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     setIsDragging(true)
@@ -113,7 +89,7 @@ export const useDragListeners = (onSwipe: (direction: SwipeDirection) => void) =
 
   return {
     verticalDragOffset,
-    horizontalDragOffset,
+    horizontalDragOffset: 0, // No horizontal dragging anymore
     swipeDirection,
     dragHandlers: {
       onTouchStart: handleTouchStart,

@@ -29,7 +29,7 @@ export function useMovies(enabled = true) {
     (string | UserAction[])[],
     PageParam
   >({
-    queryKey: ['suggestions', userProfile],
+    queryKey: ['suggestions'], //userProfile
     enabled,
     initialPageParam: { excluded: [] },
     queryFn: async ({ pageParam }) => {
@@ -54,5 +54,5 @@ export function useMovies(enabled = true) {
     placeholderData: (previousData) => previousData,
   })
 
-  return { ...query, onUserAction }
+  return { ...query, onUserAction, userProfile }
 }

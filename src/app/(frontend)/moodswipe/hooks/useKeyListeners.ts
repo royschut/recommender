@@ -13,14 +13,6 @@ export const useKeyListeners = (onSwipe: (direction: SwipeDirection) => void) =>
           event.preventDefault()
           onSwipe('down')
           break
-        case 'ArrowLeft':
-          event.preventDefault()
-          onSwipe('left')
-          break
-        case 'ArrowRight':
-          event.preventDefault()
-          onSwipe('right')
-          break
       }
     }
 

@@ -30,20 +30,13 @@ export function SwipeContainer<T>({
       style={{ userSelect: 'none', ...style }}
     >
       {movieColumns.map((column, columnIndex) => {
+        // Only render the first (and only) column
+        if (columnIndex !== 0) return null
+
         const isActiveColumn = columnIndex === currentHorizontalIndex
-        const columnOffset =
-          (columnIndex - currentHorizontalIndex) * 100 +
-          (horizontalDragOffset / (typeof window !== 'undefined' ? window.innerWidth : 400)) * 100
 
         return (
-          <div
-            key={columnIndex}
-            className="absolute w-full h-full"
-            style={{
-              transform: `translateX(${columnOffset}%)`,
-              transition: horizontalDragOffset === 0 ? 'transform 0.2s ease-out' : 'none',
-            }}
-          >
+          <div key={columnIndex} className="absolute w-full h-full">
             {column
               .slice(Math.max(0, currentVerticalIndex - 1), currentVerticalIndex + 2)
               .map((item, idx) => {

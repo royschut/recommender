@@ -6,17 +6,25 @@ import { SwipeContainer } from './components/SwipeContainer'
 import { SwipeIndicator } from './components/SwipeIndicator'
 import { ArrowKey } from './components/ArrowKey'
 import { MovieCard } from './components/MovieCard'
+import { MovieMiniatures } from './components/MovieMiniatures'
 import { useMovies } from './hooks/useMovies'
 import { useSwipeIndex } from './hooks/useSwipeIndex'
-import { useKeyListeners } from './hooks/useKeyListeners'
 import { useDragListeners } from './hooks/useDragListeners'
 import { Movie } from './Movie'
+import { useKeyListeners } from './hooks/useKeyListeners'
 
 export type SwipeDirection = 'up' | 'down' | 'left' | 'right'
 
 const MoodSwipe = () => {
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage, onUserAction } =
-    useMovies()
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    onUserAction,
+    userProfile,
+  } = useMovies()
   const movies: Movie[] = data?.pages?.flatMap((page: { results: Movie[] }) => page.results) ?? []
 
   const { xIndex, yIndex, handleSwipe, movieColumns } = useSwipeIndex(movies, onUserAction)
@@ -25,12 +33,38 @@ const MoodSwipe = () => {
   const { verticalDragOffset, horizontalDragOffset, swipeDirection, dragHandlers } =
     useDragListeners(handleSwipe)
 
-  // Determine swipe feedback based on swipeDirection and drag intensity
-  const swipeIntensity = Math.min(Math.abs(horizontalDragOffset) / 120, 1) // Max at 120px
-  const isLiking = swipeDirection === 'right' && Math.abs(horizontalDragOffset) > 30
-  const isDisliking = swipeDirection === 'left' && Math.abs(horizontalDragOffset) > 30
+  // No swipe feedback for like/dislike anymore - only vertical navigation
+  const swipeIntensity = Math.min(Math.abs(verticalDragOffset) / 120, 1) // Max at 120px
+  const isLiking = false // No horizontal swipe feedback
+  const isDisliking = false // No horizontal swipe feedback
 
-  const movie = movieColumns[xIndex]?.[yIndex]
+  const movie = movieColumns[0]?.[yIndex]
+
+  // Get all movies for miniatures component
+  const allMovies = data?.pages?.flatMap((page) => page.results) ?? []
+
+  // Handle like/dislike actions
+  const handleLike = () => {
+    const currentMovie = movieColumns[0][yIndex]
+    if (currentMovie && onUserAction) {
+      onUserAction(String(currentMovie.id), 'like')
+    }
+    // Move to next movie
+    if (yIndex < movieColumns[0].length - 1) {
+      handleSwipe('down')
+    }
+  }
+
+  const handleDislike = () => {
+    const currentMovie = movieColumns[0][yIndex]
+    if (currentMovie && onUserAction) {
+      onUserAction(String(currentMovie.id), 'dislike')
+    }
+    // Move to next movie
+    if (yIndex < movieColumns[0].length - 1) {
+      handleSwipe('down')
+    }
+  }
 
   useEffect(() => {
     if (!movie) return
@@ -56,6 +90,9 @@ const MoodSwipe = () => {
   const main = () => {
     return (
       <>
+        {/* Miniature liked/disliked movies at the top */}
+        <MovieMiniatures userProfile={userProfile} allMovies={allMovies} />
+
         <div {...dragHandlers} className="absolute inset-0">
           <SwipeContainer
             movieColumns={movieColumns}
@@ -69,7 +106,7 @@ const MoodSwipe = () => {
           />
         </div>
 
-        {/* Swipe Feedback Overlay - only during horizontal swipe */}
+        {/* Swipe Feedback Overlay - for like/dislike gestures */}
         {(isLiking || isDisliking) && (
           <div className="pointer-events-none absolute inset-0 z-20">
             <div
@@ -94,14 +131,24 @@ const MoodSwipe = () => {
           </div>
         )}
 
-        {/* Regular Indicators - hidden during horizontal swipe feedback */}
-        <div
-          className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${
-            !swipeDirection || (swipeDirection !== 'left' && swipeDirection !== 'right')
-              ? 'opacity-100'
-              : 'opacity-0'
-          }`}
-        >
+        {/* Like/Dislike buttons */}
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex space-x-8 z-30">
+          <button
+            onClick={handleDislike}
+            className="bg-red-500/20 hover:bg-red-500/30 border-2 border-red-400/50 hover:border-red-400 rounded-full p-4 transition-all duration-200 backdrop-blur-sm"
+          >
+            <div className="w-8 h-8 flex items-center justify-center text-3xl">👎</div>
+          </button>
+          <button
+            onClick={handleLike}
+            className="bg-green-500/20 hover:bg-green-500/30 border-2 border-green-400/50 hover:border-green-400 rounded-full p-4 transition-all duration-200 backdrop-blur-sm"
+          >
+            <div className="w-8 h-8 flex items-center justify-center text-3xl">👍</div>
+          </button>
+        </div>
+
+        {/* Regular Indicators - only vertical navigation */}
+        <div className="pointer-events-none absolute inset-0">
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
             <SwipeIndicator
               direction="down"
@@ -111,20 +158,6 @@ const MoodSwipe = () => {
                 </div>
               }
               label={'Explore'}
-            />
-          </div>
-          <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            <SwipeIndicator
-              direction="left"
-              icon={<div className="w-8 h-8 flex items-center justify-center text-2xl">👎</div>}
-              label="Not interesting"
-            />
-          </div>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <SwipeIndicator
-              direction="right"
-              icon={<div className="w-8 h-8 flex items-center justify-center text-2xl">👍</div>}
-              label="Like"
             />
           </div>
         </div>
@@ -156,14 +189,27 @@ const MoodSwipe = () => {
 
           <div className="flex flex-col items-center space-y-4">
             <ArrowKey direction="up" onClick={() => handleSwipe('up')} disabled={yIndex <= 0} />
+
+            {/* Like/Dislike buttons for desktop */}
             <div className="flex space-x-4">
-              <ArrowKey direction="left" onClick={() => handleSwipe('left')} disabled={false} />
-              <ArrowKey direction="right" onClick={() => handleSwipe('right')} disabled={false} />
+              <button
+                onClick={handleDislike}
+                className="bg-red-500/20 hover:bg-red-500/30 border-2 border-red-400/50 hover:border-red-400 rounded-full p-3 transition-all duration-200"
+              >
+                <div className="w-6 h-6 flex items-center justify-center text-xl">👎</div>
+              </button>
+              <button
+                onClick={handleLike}
+                className="bg-green-500/20 hover:bg-green-500/30 border-2 border-green-400/50 hover:border-green-400 rounded-full p-3 transition-all duration-200"
+              >
+                <div className="w-6 h-6 flex items-center justify-center text-xl">👍</div>
+              </button>
             </div>
+
             <ArrowKey
               direction="down"
               onClick={() => handleSwipe('down')}
-              disabled={yIndex >= movieColumns[xIndex]?.length - 1}
+              disabled={yIndex >= movieColumns[0]?.length - 1}
             />
           </div>
         </div>
