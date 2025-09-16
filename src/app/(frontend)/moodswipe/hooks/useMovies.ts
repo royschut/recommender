@@ -23,15 +23,24 @@ export function useMovies(enabled = true) {
     setUserProfile((prev) => [...prev, swipeAction])
     console.log('📝 Swipe geregistreerd:', swipeAction)
   }
-  const query = useInfiniteQuery<Page, Error, InfiniteData<Page>, string[], PageParam>({
-    queryKey: ['suggestions'],
+  const query = useInfiniteQuery<
+    Page,
+    Error,
+    InfiniteData<Page>,
+    (string | UserAction[])[],
+    PageParam
+  >({
+    queryKey: ['suggestions', userProfile],
     enabled,
     initialPageParam: { excluded: [] },
     queryFn: async ({ pageParam }) => {
       const res = await fetch('/api/moodswipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ excluded: pageParam.excluded }),
+        body: JSON.stringify({
+          excluded: pageParam.excluded,
+          userProfile: userProfile,
+        }),
       })
       return (await res.json()) as Page
     },
@@ -41,6 +50,7 @@ export function useMovies(enabled = true) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchOnMount: false,
+    placeholderData: (previousData) => previousData,
   })
 
   return { ...query, onUserAction }
