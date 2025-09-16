@@ -25,5 +25,8 @@ export function useMovies(enabled = true) {
     getNextPageParam: (_, allPages) => {
       return { excluded: allPages.flatMap((page) => page.results.map((movie) => String(movie.id))) }
     },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   })
 }
