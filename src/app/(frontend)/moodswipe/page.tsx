@@ -20,8 +20,13 @@ const MoodSwipe = () => {
 
   const { xIndex, yIndex, handleSwipe, movieColumns } = useSwipeIndex(movies)
   useKeyListeners(handleSwipe)
-  const { verticalDragOffset, horizontalDragOffset, isSwipping, dragHandlers } =
+  const { verticalDragOffset, horizontalDragOffset, swipeDirection, dragHandlers } =
     useDragListeners(handleSwipe)
+
+  // Determine swipe feedback based on swipeDirection and drag intensity
+  const swipeIntensity = Math.min(Math.abs(horizontalDragOffset) / 120, 1) // Max at 120px
+  const isLiking = swipeDirection === 'right' && Math.abs(horizontalDragOffset) > 30
+  const isDisliking = swipeDirection === 'left' && Math.abs(horizontalDragOffset) > 30
 
   const movie = movieColumns[xIndex]?.[yIndex]
 
@@ -58,13 +63,42 @@ const MoodSwipe = () => {
             verticalDragOffset={verticalDragOffset}
             horizontalDragOffset={horizontalDragOffset}
             renderItem={(movie: Movie, isActive: boolean) => (
-              <MovieCard movie={movie} isActive={isActive} isSwipping={isSwipping} />
+              <MovieCard movie={movie} isActive={isActive} isSwipping={Boolean(swipeDirection)} />
             )}
           />
         </div>
+
+        {/* Swipe Feedback Overlay - only during horizontal swipe */}
+        {(isLiking || isDisliking) && (
+          <div className="pointer-events-none absolute inset-0 z-20">
+            <div
+              className={`absolute inset-0 transition-all duration-200 ${
+                isLiking ? 'bg-green-600/15' : isDisliking ? 'bg-red-600/15' : 'bg-transparent'
+              }`}
+              style={{ opacity: swipeIntensity * 0.4 }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div
+                className={`transform transition-all duration-200 ${
+                  isLiking ? 'text-green-400' : 'text-red-400'
+                }`}
+                style={{
+                  transform: `scale(${1 + swipeIntensity * 0.5})`,
+                  opacity: swipeIntensity,
+                }}
+              >
+                <div className="text-8xl drop-shadow-2xl">{isLiking ? '👍' : '👎'}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Regular Indicators - hidden during horizontal swipe feedback */}
         <div
           className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${
-            !isSwipping ? 'opacity-100' : 'opacity-0'
+            !swipeDirection || (swipeDirection !== 'left' && swipeDirection !== 'right')
+              ? 'opacity-100'
+              : 'opacity-0'
           }`}
         >
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
@@ -81,25 +115,15 @@ const MoodSwipe = () => {
           <div className="absolute left-4 top-1/2 -translate-y-1/2">
             <SwipeIndicator
               direction="left"
-              label={
-                xIndex === 1
-                  ? movies[yIndex]?.moodSuggestions?.similar.title || ''
-                  : xIndex === 2
-                    ? 'Back'
-                    : ''
-              }
+              icon={<div className="w-8 h-8 flex items-center justify-center text-2xl">👎</div>}
+              label="Not interesting"
             />
           </div>
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <SwipeIndicator
               direction="right"
-              label={
-                xIndex === 1
-                  ? movies[yIndex]?.moodSuggestions?.contrasting.title || ''
-                  : xIndex === 0
-                    ? 'Back'
-                    : ''
-              }
+              icon={<div className="w-8 h-8 flex items-center justify-center text-2xl">👍</div>}
+              label="Like"
             />
           </div>
         </div>
@@ -132,24 +156,8 @@ const MoodSwipe = () => {
           <div className="flex flex-col items-center space-y-4">
             <ArrowKey direction="up" onClick={() => handleSwipe('up')} disabled={yIndex <= 0} />
             <div className="flex space-x-4">
-              <ArrowKey
-                direction="left"
-                onClick={() => handleSwipe('left')}
-                disabled={
-                  xIndex === 0 ||
-                  (xIndex === 1 &&
-                    !movies[yIndex]?.moodSuggestions?.similar?.recommendedMovies?.length)
-                }
-              />
-              <ArrowKey
-                direction="right"
-                onClick={() => handleSwipe('right')}
-                disabled={
-                  xIndex === 2 ||
-                  (xIndex === 1 &&
-                    !movies[yIndex]?.moodSuggestions?.contrasting?.recommendedMovies?.length)
-                }
-              />
+              <ArrowKey direction="left" onClick={() => handleSwipe('left')} disabled={false} />
+              <ArrowKey direction="right" onClick={() => handleSwipe('right')} disabled={false} />
             </div>
             <ArrowKey
               direction="down"
