@@ -48,7 +48,7 @@ export const MovieMiniatures: React.FC<MovieMiniaturesProps> = ({ userProfile, a
             <div
               key={`liked-${movie.id}-${index}`}
               className="w-8 h-12 rounded overflow-hidden bg-gray-800 relative shadow-[0_2px_8px_rgba(0,255,120,0.10)]"
-              style={{ zIndex: 100 + index, marginLeft: index === 0 ? 0 : '-.5rem' }}
+              style={{ zIndex: 100 + index, marginLeft: index === 0 ? 0 : '-0.3rem' }}
             >
               {movie.poster_path || movie.image || movie.posterUrl ? (
                 <Image
@@ -80,7 +80,7 @@ export const MovieMiniatures: React.FC<MovieMiniaturesProps> = ({ userProfile, a
             <div
               key={`disliked-${movie.id}-${index}`}
               className="w-8 h-12 rounded overflow-hidden bg-gray-800 relative"
-              style={{ zIndex: 100 + index, marginLeft: index === 0 ? 0 : '-.2rem' }}
+              style={{ zIndex: 100 + index, marginLeft: index === 0 ? 0 : '-0.3rem' }}
             >
               {movie.poster_path || movie.image || movie.posterUrl ? (
                 <Image
