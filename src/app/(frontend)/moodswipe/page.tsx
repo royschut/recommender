@@ -15,11 +15,13 @@ import { Movie } from './Movie'
 export type SwipeDirection = 'up' | 'down' | 'left' | 'right'
 
 const MoodSwipe = () => {
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useMovies()
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage, fetchNested } =
+    useMovies()
   const movies: Movie[] = data?.pages?.flatMap((page: { results: Movie[] }) => page.results) ?? []
 
   const { xIndex, yIndex, handleSwipe, movieColumns } = useSwipeIndex(movies)
   useKeyListeners(handleSwipe)
+
   const { verticalDragOffset, horizontalDragOffset, swipeDirection, dragHandlers } =
     useDragListeners(handleSwipe)
 
@@ -30,9 +32,16 @@ const MoodSwipe = () => {
 
   const movie = movieColumns[xIndex]?.[yIndex]
 
-  // Load more movies when we're getting close to the end
   useEffect(() => {
-    if (xIndex !== 1) return
+    // Load recommendations for the left/right columns if needed
+    if (!movie) return
+    if (xIndex === 2) {
+      return fetchNested('right')
+    } else if (xIndex === 0) {
+      return fetchNested('left')
+    }
+
+    // Load more movies when we're getting close to the end
     if (yIndex >= movies.length - 5 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage()
     }
@@ -43,14 +52,14 @@ const MoodSwipe = () => {
     movieColumns.length,
     hasNextPage,
     isFetchingNextPage,
+    movie,
     fetchNextPage,
+    fetchNested,
   ])
 
   if (isLoading || !movies || movies.length === 0) {
     return <div>Loading...</div>
   }
-
-  console.log({ movieColumns, xIndex, yIndex, sugg: movie?.moodSuggestions })
 
   const main = () => {
     return (

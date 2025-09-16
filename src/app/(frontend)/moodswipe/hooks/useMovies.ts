@@ -10,7 +10,7 @@ interface PageParam {
 }
 
 export function useMovies(enabled = true) {
-  return useInfiniteQuery<Page, Error, InfiniteData<Page>, string[], PageParam>({
+  const query = useInfiniteQuery<Page, Error, InfiniteData<Page>, string[], PageParam>({
     queryKey: ['suggestions'],
     enabled,
     initialPageParam: { excluded: [] },
@@ -29,4 +29,13 @@ export function useMovies(enabled = true) {
     refetchOnReconnect: false,
     refetchOnMount: false,
   })
+
+  const fetchNested = (direction: 'left' | 'right') => {
+    console.log('📡 Callback ontvangen', direction)
+  }
+
+  return {
+    ...query,
+    fetchNested,
+  }
 }
