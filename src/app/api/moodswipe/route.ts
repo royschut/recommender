@@ -1,17 +1,26 @@
 import { QdrantClient } from '@qdrant/js-client-rest'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import { getRandomMovies, getBatchMovieRecommendations } from './utils'
+import {
+  getRandomMovies,
+  getBatchMovieRecommendations,
+  getRecommendationsForUserProfile,
+} from './utils'
 import { NextResponse } from 'next/server'
 
 const qdrant = new QdrantClient({ url: process.env.QDRANT_URL, apiKey: process.env.QDRANT_API_KEY })
 
 export async function POST(req: Request) {
   try {
-    const { excluded = [] } = await req.json()
+    const { excluded = [], userProfile = [] } = await req.json()
 
-    // 1. Get random movies vectors
-    const { points: movies } = await getRandomMovies(qdrant, excluded)
+    // 1. Get movies based on userProfile or random if no profile
+    const moviesResponse =
+      userProfile.length > 0
+        ? await getRecommendationsForUserProfile(qdrant, userProfile, excluded)
+        : await getRandomMovies(qdrant, excluded)
+
+    const movies = 'points' in moviesResponse ? moviesResponse.points : moviesResponse
 
     if (!movies.length) return NextResponse.json({ success: true, results: [], totalFound: 0 })
 

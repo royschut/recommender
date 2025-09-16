@@ -14,38 +14,53 @@ export const getRandomMovies = async (qdrant: QdrantClient, excluded: string[]) 
   })
 }
 
-export const getMovieRecommendations = async (
+export const getRecommendationsForUserProfile = async (
   qdrant: QdrantClient,
-  movieId: string,
-  pointId: number,
-  neutralVectorId: number,
+  userProfile: Array<{ movieId: string; action: 'like' | 'dislike' }>,
+  excluded: string[],
 ) => {
-  const filter = {
-    must_not: [
-      { key: 'type', match: { value: 'mood' } },
-      { key: 'movieId', match: { value: movieId } },
-    ],
-  }
+  // Get all movie IDs from userProfile
+  const allMovieIds = userProfile.map((action) => action.movieId)
 
-  const [like, dislike] = await Promise.all([
-    // Like: similar movies
-    qdrant.recommend(COLLECTION, {
-      positive: [pointId],
-      filter,
-      limit: 10,
-      with_payload: true,
-    }),
-    // Dislike: opposite movies using neutral vector
-    qdrant.recommend(COLLECTION, {
-      positive: [neutralVectorId],
-      negative: [pointId],
-      filter,
-      limit: 10,
-      with_payload: true,
-    }),
-  ])
+  // Find the Qdrant points for these movies
+  const { points } = await qdrant.scroll(COLLECTION, {
+    filter: {
+      must: [{ key: 'movieId', match: { any: allMovieIds } }],
+    },
+    with_payload: true,
+    limit: allMovieIds.length,
+  })
 
-  return { movieId, like, dislike }
+  // Map to positive/negative point IDs
+  const positive = points
+    .filter((p) => {
+      const movieId = p.payload?.movieId as string
+      return userProfile.some((action) => action.movieId === movieId && action.action === 'like')
+    })
+    .map((p) => p.id)
+
+  const negative = points
+    .filter((p) => {
+      const movieId = p.payload?.movieId as string
+      return userProfile.some((action) => action.movieId === movieId && action.action === 'dislike')
+    })
+    .map((p) => p.id)
+
+  return qdrant.recommend(COLLECTION, {
+    positive,
+    negative,
+    filter: excluded.length
+      ? {
+          must_not: [
+            { key: 'type', match: { value: 'mood' } },
+            { key: 'movieId', match: { any: excluded } },
+          ],
+        }
+      : undefined,
+    limit: 10,
+    with_payload: true,
+    with_vector: true,
+  })
 }
 
 export const getBatchMovieRecommendations = async (
