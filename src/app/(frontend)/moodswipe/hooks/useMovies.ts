@@ -20,10 +20,7 @@ export function useMovies(enabled = true) {
 
   const onUserAction = (movieId: string, action: 'like' | 'dislike') => {
     const swipeAction: UserAction = { movieId, action }
-    setTimeout(() => {
-      setUserProfile((prev) => [...prev, swipeAction])
-    }, 5000)
-    console.log('📝 Swipe geregistreerd:', swipeAction)
+    setUserProfile((prev) => [...prev, swipeAction])
   }
   const query = useInfiniteQuery<
     Page,
