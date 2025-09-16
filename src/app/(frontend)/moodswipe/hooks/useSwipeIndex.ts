@@ -7,7 +7,7 @@ export const useSwipeIndex = (movies: Movie[]) => {
   const [yIndex, setYIndex] = useState(0)
   const [lastCenterIndex, setLastCenterIndex] = useState(0)
 
-  // Build movie columns dynamically based on current movie and its mood suggestions
+  // Build movie columns dynamically based on current movie and its like/dislike recommendations
   const movieColumns = useMemo(() => {
     if (!movies || movies.length === 0) return [[], [], []]
 
@@ -16,24 +16,20 @@ export const useSwipeIndex = (movies: Movie[]) => {
     const referenceIndex = xIndex === 1 ? yIndex : lastCenterIndex
     const currentCenterMovie = movies[referenceIndex] || movies[0]
 
-    const similarMovies = currentCenterMovie?.moodSuggestions?.similar?.recommendedMovies || []
-    const contrastingMovies =
-      currentCenterMovie?.moodSuggestions?.contrasting?.recommendedMovies || []
+    const dislikeMovies = currentCenterMovie?.recommendations?.dislike || []
+    const likeMovies = currentCenterMovie?.recommendations?.like || []
 
     const leftColumn =
-      similarMovies.length > 0
+      dislikeMovies.length > 0
         ? Array.from(
             { length: movies.length * 2 },
-            (_, i) => similarMovies[i % similarMovies.length],
+            (_, i) => dislikeMovies[i % dislikeMovies.length],
           )
         : []
 
     const rightColumn =
-      contrastingMovies.length > 0
-        ? Array.from(
-            { length: movies.length * 2 },
-            (_, i) => contrastingMovies[i % contrastingMovies.length],
-          )
+      likeMovies.length > 0
+        ? Array.from({ length: movies.length * 2 }, (_, i) => likeMovies[i % likeMovies.length])
         : []
 
     return [leftColumn, centerColumn, rightColumn]

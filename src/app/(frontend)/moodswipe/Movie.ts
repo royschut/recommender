@@ -24,4 +24,8 @@ export type Movie = {
     similar: MoodSuggestion
     contrasting: MoodSuggestion
   }
+  recommendations?: {
+    like: Movie[]
+    dislike: Movie[]
+  }
 }
