@@ -55,17 +55,21 @@ export async function POST(req: Request) {
     })
     const recDocById = new Map(recDocs.map((doc: any) => [doc.id, doc]))
 
+    // Create a map of movieId to recommendations for proper mapping
+    const recsByMovieId = new Map(movieRecommendations.map((rec) => [rec.movieId, rec]))
+
     // Build final results
-    const results = movieDocs.map((movieDoc: any, i: number) => {
-      const recs = movieRecommendations[i]
+    const results = movieDocs.map((movieDoc: any) => {
+      const recs = recsByMovieId.get(movieDoc.id)
+
       return {
         ...movieDoc,
         recommendations: {
-          like: recs.like.map((p: any) => ({
+          like: recs?.like.map((p: any) => ({
             ...recDocById.get(p.payload?.movieId),
             score: p.score,
           })),
-          dislike: recs.dislike.map((p: any) => ({
+          dislike: recs?.dislike.map((p: any) => ({
             ...recDocById.get(p.payload?.movieId),
             score: p.score,
           })),

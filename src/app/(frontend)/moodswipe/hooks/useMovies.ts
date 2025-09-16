@@ -20,7 +20,9 @@ export function useMovies(enabled = true) {
 
   const onUserAction = (movieId: string, action: 'like' | 'dislike') => {
     const swipeAction: UserAction = { movieId, action }
-    setUserProfile((prev) => [...prev, swipeAction])
+    setTimeout(() => {
+      setUserProfile((prev) => [...prev, swipeAction])
+    }, 5000)
     console.log('📝 Swipe geregistreerd:', swipeAction)
   }
   const query = useInfiniteQuery<
@@ -45,7 +47,9 @@ export function useMovies(enabled = true) {
       return (await res.json()) as Page
     },
     getNextPageParam: (_, allPages) => {
-      return { excluded: allPages.flatMap((page) => page.results.map((movie) => String(movie.id))) }
+      return {
+        excluded: allPages.flatMap((page) => page.results?.map((movie) => String(movie.id))),
+      }
     },
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

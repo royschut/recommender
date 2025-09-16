@@ -49,14 +49,12 @@ export const getRecommendationsForUserProfile = async (
   return qdrant.recommend(COLLECTION, {
     positive,
     negative,
-    filter: excluded.length
-      ? {
-          must_not: [
-            { key: 'type', match: { value: 'mood' } },
-            { key: 'movieId', match: { any: excluded } },
-          ],
-        }
-      : undefined,
+    filter: {
+      must_not: [
+        { key: 'type', match: { value: 'mood' } },
+        { key: 'movieId', match: { any: allMovieIds } },
+      ],
+    },
     limit: 10,
     with_payload: true,
     with_vector: true,
@@ -97,9 +95,10 @@ export const getBatchMovieRecommendations = async (
   const results = await qdrant.recommendBatch(COLLECTION, { searches })
 
   // Group results back into like/dislike pairs per movie
+  // Each movie generates 2 searches (like, dislike), so results[i*2] = like, results[i*2+1] = dislike
   return movies.map((movie, i) => ({
     movieId: movie.payload?.movieId,
-    like: results[i * 2],
-    dislike: results[i * 2 + 1],
+    like: results[i * 2] || [],
+    dislike: results[i * 2 + 1] || [],
   }))
 }
