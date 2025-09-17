@@ -1,5 +1,5 @@
 import { useInfiniteQuery, InfiniteData, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Movie } from '../Movie'
 
 interface Page {
@@ -101,9 +101,9 @@ export function useMovies(enabled = true) {
     refetchOnMount: false,
   })
 
-  const onConfigureMood = (newMoodProfile: { [key: Mood['id']]: number }) => {
+  const onConfigureMood = useCallback((newMoodProfile: { [key: Mood['id']]: number }) => {
     setMoodProfile(newMoodProfile)
-  }
+  }, [])
 
   return {
     ...query,

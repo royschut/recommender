@@ -35,17 +35,12 @@ const MoodSwipe = () => {
     []
 
   const { xIndex, yIndex, handleSwipe, movieColumns } = useSwipeIndex(movies, onUserAction)
+  const movie = movieColumns[0]?.[yIndex]
+
   useKeyListeners(handleSwipe)
 
   const { verticalDragOffset, horizontalDragOffset, swipeDirection, dragHandlers } =
     useDragListeners(handleSwipe)
-
-  // No swipe feedback for like/dislike anymore - only vertical navigation
-  const swipeIntensity = Math.min(Math.abs(verticalDragOffset) / 120, 1) // Max at 120px
-  const isLiking = false // No horizontal swipe feedback
-  const isDisliking = false // No horizontal swipe feedback
-
-  const movie = movieColumns[0]?.[yIndex]
 
   // Get all movies for miniatures component
   const allMovies = data?.pages?.flatMap((page) => page.results) ?? []
@@ -91,7 +86,9 @@ const MoodSwipe = () => {
   ])
 
   if (isLoading || !movies || movies.length === 0) {
-    return <div>Loading...</div>
+    return (
+      <div className="absolute inset-0 flex items-center justify-center text-white">Loading...</div>
+    )
   }
 
   const main = () => {
@@ -113,42 +110,17 @@ const MoodSwipe = () => {
           />
         </div>
 
-        {/* Swipe Feedback Overlay - for like/dislike gestures */}
-        {(isLiking || isDisliking) && (
-          <div className="pointer-events-none absolute inset-0 z-20">
-            <div
-              className={`absolute inset-0 transition-all duration-200 ${
-                isLiking ? 'bg-green-600/15' : isDisliking ? 'bg-red-600/15' : 'bg-transparent'
-              }`}
-              style={{ opacity: swipeIntensity * 0.4 }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className={`transform transition-all duration-200 ${
-                  isLiking ? 'text-green-400' : 'text-red-400'
-                }`}
-                style={{
-                  transform: `scale(${1 + swipeIntensity * 0.5})`,
-                  opacity: swipeIntensity,
-                }}
-              >
-                <div className="text-8xl drop-shadow-2xl">{isLiking ? '👍' : '👎'}</div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Like/Dislike buttons */}
-        <div className="absolute bottom-40 left-1/2 -translate-x-1/2 flex space-x-8 z-30">
+        <div className="absolute bottom-40 left-1/2 -translate-x-1/2 flex space-x-8 z-30 ">
           <button
             onClick={handleDislike}
-            className="bg-red-500/20 hover:bg-red-500/30 border-2 border-red-400/50 hover:border-red-400 rounded-full p-4 transition-all duration-200 backdrop-blur-sm"
+            className="shadow-2xl bg-red-500/20 hover:bg-red-500/30 border-2 border-red-400/50 hover:border-red-400 rounded-full p-4 transition-all duration-200 backdrop-blur-sm"
           >
             <div className="w-8 h-8 flex items-center justify-center text-3xl">👎</div>
           </button>
           <button
             onClick={handleLike}
-            className="bg-green-500/20 hover:bg-green-500/30 border-2 border-green-400/50 hover:border-green-400 rounded-full p-4 transition-all duration-200 backdrop-blur-sm"
+            className="shadow-2xl bg-green-500/20 hover:bg-green-500/30 border-2 border-green-400/50 hover:border-green-400 rounded-full p-4 transition-all duration-200 backdrop-blur-sm"
           >
             <div className="w-8 h-8 flex items-center justify-center text-3xl">👍</div>
           </button>
