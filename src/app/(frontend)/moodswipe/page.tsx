@@ -20,14 +20,19 @@ const MoodSwipe = () => {
   const {
     data,
     moods,
+    moodBasedSuggestions,
     isLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     onUserAction,
     userProfile,
+    onConfigureMood,
   } = useMovies()
-  const movies: Movie[] = data?.pages?.flatMap((page: { results: Movie[] }) => page.results) ?? []
+  const movies: Movie[] =
+    (moodBasedSuggestions?.data?.results ||
+      data?.pages?.flatMap((page: { results: Movie[] }) => page.results)) ??
+    []
 
   const { xIndex, yIndex, handleSwipe, movieColumns } = useSwipeIndex(movies, onUserAction)
   useKeyListeners(handleSwipe)
@@ -93,7 +98,7 @@ const MoodSwipe = () => {
     return (
       <>
         <MovieMiniatures userProfile={userProfile} allMovies={allMovies} />
-        <MoodChips moods={moods} />
+        <MoodChips moods={moods} onConfigureMood={onConfigureMood} />
 
         <div {...dragHandlers} className="absolute inset-0">
           <SwipeContainer

@@ -5,13 +5,23 @@ export type MoodShape = { title?: string; description?: string; score?: number }
 
 interface MoodChipsProps {
   moods?: Mood[] | undefined
-  onConfigureMood: (moodProfile: { [key: string]: number }) => void
+  onConfigureMood: (moodProfile: { [key: Mood['id']]: number }) => void
 }
 
 export const MoodChips: React.FC<MoodChipsProps> = ({ moods, onConfigureMood }) => {
-  const [moodProfile, setMoodProfile] = useState<{ [key: Mood['id']]: number }>({})
   const [showAll, setShowAll] = useState(false)
   const sortedMoods = moods?.slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0)) ?? []
+  const moodDict =
+    moods?.reduce(
+      (acc, mood) => {
+        if (mood.id) {
+          acc[mood.id] = mood.score ?? 0
+        }
+        return acc
+      },
+      {} as { [key: Mood['id']]: number },
+    ) || {}
+  const [moodProfile, setMoodProfile] = useState<{ [key: Mood['id']]: number }>(moodDict)
   const topMoods = sortedMoods.slice(0, 4)
 
   if (topMoods.length === 0) return null
@@ -107,7 +117,7 @@ export const MoodChips: React.FC<MoodChipsProps> = ({ moods, onConfigureMood }) 
                   type="button"
                   onClick={() => {
                     onConfigureMood(moodProfile)
-                    setMoodProfile({})
+                    setShowAll(false)
                   }}
                 >
                   Save profile
@@ -117,7 +127,7 @@ export const MoodChips: React.FC<MoodChipsProps> = ({ moods, onConfigureMood }) 
                   type="button"
                   onClick={() => {
                     setShowAll(false)
-                    setMoodProfile({})
+                    setMoodProfile(moodDict)
                   }}
                 >
                   Cancel

@@ -83,7 +83,7 @@ export function useMovies(enabled = true) {
   })
 
   const moodBasedSuggestions = useQuery({
-    queryKey: ['suggestions', 'moodProfile', setMoodProfile],
+    queryKey: ['suggestions', 'moodProfile', moodProfile],
     queryFn: async () => {
       const res = await fetch('/api/moodswipe', {
         method: 'POST',
@@ -95,7 +95,7 @@ export function useMovies(enabled = true) {
       return await res.json()
     },
     placeholderData: (previousData) => previousData,
-    enabled,
+    enabled: Object.keys(moodProfile).length > 0,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchOnMount: false,
@@ -105,5 +105,12 @@ export function useMovies(enabled = true) {
     setMoodProfile(newMoodProfile)
   }
 
-  return { ...query, moods: moods.data?.results, onUserAction, userProfile, onConfigureMood }
+  return {
+    ...query,
+    moods: moods.data?.results,
+    onUserAction,
+    userProfile,
+    onConfigureMood,
+    moodBasedSuggestions,
+  }
 }
