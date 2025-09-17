@@ -27,7 +27,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, isActive, isSwippin
           }`}
         >
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
-          <div className="relative px-4 py-3 mb-[60px]">
+          <div className="relative px-4 mb-[60px]">
             <h2
               className="text-lg font-bold mb-1"
               style={{

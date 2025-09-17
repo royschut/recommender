@@ -18,6 +18,7 @@ export type SwipeDirection = 'up' | 'down' | 'left' | 'right'
 const MoodSwipe = () => {
   const {
     data,
+    moods,
     isLoading,
     fetchNextPage,
     hasNextPage,
@@ -88,6 +89,14 @@ const MoodSwipe = () => {
   }
 
   const main = () => {
+    type MoodShape = { title?: string; description?: string; score?: number }
+    const moodList: MoodShape[] = Array.isArray(moods) ? (moods as MoodShape[]) : []
+
+    const topMoods = moodList
+      .slice()
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .slice(0, 3)
+
     return (
       <>
         {/* Miniature liked/disliked movies at the top */}
@@ -105,6 +114,24 @@ const MoodSwipe = () => {
             )}
           />
         </div>
+
+        {/* Top mood chips */}
+        {topMoods.length > 0 && (
+          <div className="px-4 pt-4 absolute top-20 flex-col gap-2 flex overflow-x-auto space-x-2 z-10">
+            {topMoods.map((mood, idx) => (
+              <div
+                key={mood.title ?? idx}
+                className="inline-flex items-center space-x-2 rounded-full bg-white/6 py-1.5 px-3 text-sm text-white/90"
+                title={mood.description}
+              >
+                <span className="font-medium">{mood.title ?? 'Unknown'}</span>
+                <span className="text-xs text-white/60">
+                  {Math.round((mood.score ?? 0) * 100) / 100}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Swipe Feedback Overlay - for like/dislike gestures */}
         {(isLiking || isDisliking) && (
@@ -132,7 +159,7 @@ const MoodSwipe = () => {
         )}
 
         {/* Like/Dislike buttons */}
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex space-x-8 z-30">
+        <div className="absolute bottom-40 left-1/2 -translate-x-1/2 flex space-x-8 z-30">
           <button
             onClick={handleDislike}
             className="bg-red-500/20 hover:bg-red-500/30 border-2 border-red-400/50 hover:border-red-400 rounded-full p-4 transition-all duration-200 backdrop-blur-sm"
@@ -145,21 +172,6 @@ const MoodSwipe = () => {
           >
             <div className="w-8 h-8 flex items-center justify-center text-3xl">👍</div>
           </button>
-        </div>
-
-        {/* Regular Indicators - only vertical navigation */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-            <SwipeIndicator
-              direction="down"
-              icon={
-                <div className="w-7 h-7 border-2 border-white/70 rounded flex items-center justify-center">
-                  <div className="w-2.5 h-2.5 bg-white/70 rounded-full" />
-                </div>
-              }
-              label={'Explore'}
-            />
-          </div>
         </div>
       </>
     )

@@ -1,4 +1,4 @@
-import { useInfiniteQuery, InfiniteData } from '@tanstack/react-query'
+import { useInfiniteQuery, InfiniteData, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Movie } from '../Movie'
 
@@ -13,6 +13,12 @@ interface PageParam {
 interface UserAction {
   movieId: string
   action: 'like' | 'dislike'
+}
+
+interface Mood {
+  description: string
+  title: string
+  score: number
 }
 
 export function useMovies(enabled = true) {
@@ -54,5 +60,24 @@ export function useMovies(enabled = true) {
     placeholderData: (previousData) => previousData,
   })
 
-  return { ...query, onUserAction, userProfile }
+  const moods = useQuery<{ results: Mood[] }>({
+    queryKey: ['moods', userProfile],
+    queryFn: async () => {
+      const res = await fetch('/api/moodswipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          getMoods: true,
+          userProfile,
+        }),
+      })
+      return await res.json()
+    },
+    enabled,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  })
+
+  return { ...query, moods: moods.data?.results, onUserAction, userProfile }
 }

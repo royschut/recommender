@@ -102,3 +102,52 @@ export const getBatchMovieRecommendations = async (
     dislike: results[i * 2 + 1] || [],
   }))
 }
+
+export async function getAllMoods(
+  qdrant: QdrantClient,
+  userProfile: Array<{ movieId: string; action: 'like' | 'dislike' }> = [],
+) {
+  if (!userProfile?.length) {
+    return []
+  }
+
+  const allMovieIds = userProfile.map((a) => a.movieId)
+  const { points: profilePoints } = await qdrant.scroll(COLLECTION, {
+    filter: { must: [{ key: 'movieId', match: { any: allMovieIds } }] },
+    with_payload: true,
+    limit: allMovieIds.length,
+  })
+
+  const positive = profilePoints
+    .filter((p) =>
+      userProfile.some((u) => u.movieId === (p.payload as any)?.movieId && u.action === 'like'),
+    )
+    .map((p) => p.id)
+  const negative = profilePoints
+    .filter((p) =>
+      userProfile.some((u) => u.movieId === (p.payload as any)?.movieId && u.action === 'dislike'),
+    )
+    .map((p) => p.id)
+
+  if (!positive.length && !negative.length) {
+    return []
+  }
+
+  const recs = await qdrant.recommend(COLLECTION, {
+    positive: positive.length ? positive : undefined,
+    negative: negative.length ? negative : undefined,
+    filter: {
+      must: [{ key: 'type', match: { value: 'mood' } }],
+    },
+    limit: 24,
+    with_payload: true,
+  })
+
+  return (
+    recs.map((rec) => ({
+      title: rec.payload?.title,
+      description: rec.payload?.description,
+      score: rec.score,
+    })) || []
+  )
+}

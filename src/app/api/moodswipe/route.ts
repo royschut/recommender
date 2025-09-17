@@ -1,18 +1,23 @@
 import { QdrantClient } from '@qdrant/js-client-rest'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import {
-  getRandomMovies,
-  getBatchMovieRecommendations,
-  getRecommendationsForUserProfile,
-} from './utils'
+import { getRandomMovies, getRecommendationsForUserProfile, getAllMoods } from './utils'
 import { NextResponse } from 'next/server'
 
 const qdrant = new QdrantClient({ url: process.env.QDRANT_URL, apiKey: process.env.QDRANT_API_KEY })
 
 export async function POST(req: Request) {
   try {
-    const { excluded = [], userProfile = [] } = await req.json()
+    const { excluded = [], userProfile = [], getMoods } = await req.json()
+
+    if (getMoods) {
+      const moods = await getAllMoods(qdrant, userProfile)
+
+      return NextResponse.json({
+        success: true,
+        results: moods,
+      })
+    }
 
     // 1. Get movies based on userProfile or random if no profile
     const moviesResponse =
@@ -32,54 +37,11 @@ export async function POST(req: Request) {
       limit: movieIds.length,
     })
 
-    // Use existing neutral mood vector for first dislike recommendations
-    const neutralVectorId = 1758054612634 // Existing empty mood vector (as number)
-
-    // 2. Generate like/dislike recommendations for each movie using batch
-    const movieRecommendations = await getBatchMovieRecommendations(qdrant, movies, neutralVectorId)
-
-    // Get all recommendation movie IDs and fetch docs
-    const { docs: recDocs } = await payload.find({
-      collection: 'movies',
-      where: {
-        id: {
-          in: movieRecommendations
-            .flatMap(({ like, dislike }: any) => [
-              ...like.map((p: any) => p.payload?.movieId),
-              ...dislike.map((p: any) => p.payload?.movieId),
-            ])
-            .filter(Boolean),
-        },
-      },
-      limit: 1000,
-    })
-    const recDocById = new Map(recDocs.map((doc: any) => [doc.id, doc]))
-
-    // Create a map of movieId to recommendations for proper mapping
-    const recsByMovieId = new Map(movieRecommendations.map((rec) => [rec.movieId, rec]))
-
-    // Build final results
-    const results = movieDocs.map((movieDoc: any) => {
-      const recs = recsByMovieId.get(movieDoc.id)
-
-      return {
-        ...movieDoc,
-        recommendations: {
-          like: recs?.like.map((p: any) => ({
-            ...recDocById.get(p.payload?.movieId),
-            score: p.score,
-          })),
-          dislike: recs?.dislike.map((p: any) => ({
-            ...recDocById.get(p.payload?.movieId),
-            score: p.score,
-          })),
-        },
-      }
-    })
+    // Haal alle moods op vlak voor de response (inclusief scoring op basis van userProfile)
 
     return NextResponse.json({
       success: true,
-      results,
+      results: movieDocs,
       totalFound: movieDocs.length,
       excluded: excluded.length,
     })
