@@ -152,3 +152,61 @@ export async function getAllMoods(
     })) || []
   )
 }
+
+export const getRecommendationsForMoodProfile = async (
+  qdrant: QdrantClient,
+  moodProfile: Record<string, number> = {},
+) => {
+  const moodIds = Object.keys(moodProfile)
+  let combinedVector: number[] = []
+  let totalWeight = 0
+
+  const validMoodIds = moodIds
+    .map((id) => {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      if (uuidRegex.test(id)) return id
+      const num = Number(id)
+      return !isNaN(num) && num > 0 ? num : null
+    })
+    .filter((id): id is string | number => id !== null)
+  if (validMoodIds.length === 0) {
+    return null
+  }
+  const moodPoints = await qdrant.retrieve(COLLECTION, {
+    ids: validMoodIds,
+    with_vector: true,
+  })
+  for (const point of moodPoints) {
+    const moodId = String(point.id)
+    const weight = moodProfile[moodId]
+    let vector: number[] | undefined = undefined
+    if (Array.isArray(point.vector)) {
+      vector = point.vector.map((v) => (typeof v === 'number' ? v : Number(v)))
+    } else if (point.vector && typeof point.vector === 'object' && 'values' in point.vector) {
+      vector = Array.isArray(point.vector.values)
+        ? point.vector.values.map((v) => (typeof v === 'number' ? v : Number(v)))
+        : undefined
+    }
+    if (vector && typeof weight === 'number') {
+      if (combinedVector.length === 0) {
+        combinedVector = vector.map((v) => v * weight)
+      } else {
+        combinedVector = combinedVector.map((v, i) => v + vector![i] * weight)
+      }
+      totalWeight += weight
+    }
+  }
+  if (totalWeight > 0) {
+    combinedVector = combinedVector.map((v) => v / totalWeight)
+  }
+
+  return qdrant.search(COLLECTION, {
+    vector: combinedVector,
+    filter: {
+      must_not: [{ key: 'type', match: { value: 'mood' } }],
+    },
+    limit: 20,
+    with_payload: true,
+    with_vector: false,
+  })
+}
