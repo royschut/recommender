@@ -11,6 +11,7 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Movies } from './collections/Movies'
 import { Favorites } from './collections/Favorites'
+import { Moods } from './collections/Moods'
 import importsHandler from './app/handlers/importsHandler'
 import embeddingsHandler from './app/handlers/embeddingsHandler'
 import conceptVectorsHandler from './app/handlers/conceptVectorsHandler'
@@ -42,7 +43,7 @@ export default buildConfig({
       handler: conceptVectorsHandler,
     },
   ],
-  collections: [Users, Media, Movies, Favorites],
+  collections: [Users, Media, Movies, Favorites, Moods],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

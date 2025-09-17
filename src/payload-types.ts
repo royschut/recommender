@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     movies: Movie;
     favorites: Favorite;
+    moods: Mood;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -81,6 +82,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     movies: MoviesSelect<false> | MoviesSelect<true>;
     favorites: FavoritesSelect<false> | FavoritesSelect<true>;
+    moods: MoodsSelect<false> | MoodsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -207,6 +209,31 @@ export interface Favorite {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "moods".
+ */
+export interface Mood {
+  id: string;
+  /**
+   * Short title, preferably one word (e.g., "Happy", "Romantic")
+   */
+  title: string;
+  /**
+   * Description of the mood, concept or feeling
+   */
+  description: string;
+  /**
+   * Qdrant vector ID for similarity search
+   */
+  qdrantId?: string | null;
+  /**
+   * Whether this mood has an embedding in Qdrant
+   */
+  hasEmbedding?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -227,6 +254,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'favorites';
         value: string | Favorite;
+      } | null)
+    | ({
+        relationTo: 'moods';
+        value: string | Mood;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -338,6 +369,18 @@ export interface MoviesSelect<T extends boolean = true> {
 export interface FavoritesSelect<T extends boolean = true> {
   movie?: T;
   addedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "moods_select".
+ */
+export interface MoodsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  qdrantId?: T;
+  hasEmbedding?: T;
   updatedAt?: T;
   createdAt?: T;
 }
