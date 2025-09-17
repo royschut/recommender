@@ -1,0 +1,112 @@
+[
+  {
+    "id": "rebellious",
+    "title": "Rebellious",
+    "keywords": ["rebellious", "defiant", "provocative", "revolutionary", "anti-system"]
+  },
+  {
+    "id": "uplifting",
+    "title": "Uplifting",
+    "keywords": ["uplifting", "hopeful", "positive", "heartwarming", "encouraging", "bright"]
+  },
+  {
+    "id": "disturbing",
+    "title": "Disturbing",
+    "keywords": ["disturbing", "unsettling", "eerie", "grotesque", "frightening", "shocking"]
+  },
+  {
+    "id": "surprising",
+    "title": "Surprising",
+    "keywords": ["surprising", "unexpected", "unpredictable", "astonishing", "inventive"]
+  },
+  {
+    "id": "conspiratorial",
+    "title": "Conspiratorial",
+    "keywords": ["conspiratorial", "secretive", "hidden", "deceptive", "political", "covert"]
+  },
+  {
+    "id": "suspenseful",
+    "title": "Suspenseful",
+    "keywords": ["suspenseful", "tense", "gripping", "nerve-racking", "edge-of-seat"]
+  },
+  {
+    "id": "romantic",
+    "title": "Romantic",
+    "keywords": ["romantic", "passionate", "loving", "tender", "affectionate", "emotional"]
+  },
+  {
+    "id": "tragic",
+    "title": "Tragic",
+    "keywords": ["tragic", "heartbreaking", "sorrowful", "devastating", "mournful"]
+  },
+  {
+    "id": "inspiring",
+    "title": "Inspiring",
+    "keywords": ["inspiring", "uplifting", "motivating", "empowering", "hopeful"]
+  },
+  {
+    "id": "shocking",
+    "title": "Shocking",
+    "keywords": ["shocking", "jarring", "brutal", "disturbing", "violent", "extreme"]
+  },
+  {
+    "id": "whimsical",
+    "title": "Whimsical",
+    "keywords": ["whimsical", "dreamy", "playful", "fantastical", "magical", "quirky"]
+  },
+  {
+    "id": "philosophical",
+    "title": "Philosophical",
+    "keywords": ["philosophical", "thoughtful", "contemplative", "existential", "profound"]
+  },
+  {
+    "id": "mysterious",
+    "title": "Mysterious",
+    "keywords": ["mysterious", "enigmatic", "hidden", "puzzling", "secretive", "cryptic"]
+  },
+  {
+    "id": "epic",
+    "title": "Epic",
+    "keywords": ["epic", "grand", "sweeping", "monumental", "heroic", "legendary"]
+  },
+  {
+    "id": "intimate",
+    "title": "Intimate",
+    "keywords": ["intimate", "personal", "close", "tender", "private", "heartfelt"]
+  },
+  {
+    "id": "dark",
+    "title": "Dark",
+    "keywords": ["dark", "shadowy", "ominous", "bleak", "heavy"]
+  },
+  {
+    "id": "light",
+    "title": "Light",
+    "keywords": ["light", "bright", "cheerful", "playful", "uplifting", "breezy"]
+  },
+  {
+    "id": "humorous",
+    "title": "Humorous",
+    "keywords": ["humorous", "funny", "witty", "comic", "playful", "lighthearted"]
+  },
+  {
+    "id": "serious",
+    "title": "Serious",
+    "keywords": ["serious", "solemn", "weighty", "dramatic", "earnest", "intense"]
+  },
+  {
+    "id": "energetic",
+    "title": "Energetic",
+    "keywords": ["energetic", "dynamic", "fast", "vibrant", "pulsing", "lively"]
+  },
+  {
+    "id": "calm",
+    "title": "Calm",
+    "keywords": ["calm", "quiet", "still", "peaceful", "serene", "meditative"]
+  },
+  {
+    "id": "mindbending",
+    "title": "Mindbending",
+    "keywords": ["mindbending", "surreal", "disorienting", "brain-twisting", "reality-shifting"]
+  }
+]
