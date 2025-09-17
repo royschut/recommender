@@ -15,7 +15,8 @@ interface UserAction {
   action: 'like' | 'dislike'
 }
 
-interface Mood {
+export interface Mood {
+  id: string
   description: string
   title: string
   score: number
@@ -23,6 +24,7 @@ interface Mood {
 
 export function useMovies(enabled = true) {
   const [userProfile, setUserProfile] = useState<UserAction[]>([])
+  const [moodProfile, setMoodProfile] = useState<{ [key: Mood['id']]: number }>({})
 
   const onUserAction = (movieId: string, action: 'like' | 'dislike') => {
     const swipeAction: UserAction = { movieId, action }
@@ -80,5 +82,28 @@ export function useMovies(enabled = true) {
     refetchOnMount: false,
   })
 
-  return { ...query, moods: moods.data?.results, onUserAction, userProfile }
+  const moodBasedSuggestions = useQuery({
+    queryKey: ['suggestions', 'moodProfile', setMoodProfile],
+    queryFn: async () => {
+      const res = await fetch('/api/moodswipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          moodProfile,
+        }),
+      })
+      return await res.json()
+    },
+    placeholderData: (previousData) => previousData,
+    enabled,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  })
+
+  const onConfigureMood = (newMoodProfile: { [key: Mood['id']]: number }) => {
+    setMoodProfile(newMoodProfile)
+  }
+
+  return { ...query, moods: moods.data?.results, onUserAction, userProfile, onConfigureMood }
 }

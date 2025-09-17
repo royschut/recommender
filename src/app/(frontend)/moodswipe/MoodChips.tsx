@@ -1,16 +1,18 @@
 import React, { useState } from 'react'
+import { Mood } from './hooks/useMovies'
 
 export type MoodShape = { title?: string; description?: string; score?: number }
 
 interface MoodChipsProps {
-  moods?: unknown
+  moods?: Mood[] | undefined
+  onConfigureMood: (moodProfile: { [key: string]: number }) => void
 }
 
-export const MoodChips: React.FC<MoodChipsProps> = ({ moods }) => {
+export const MoodChips: React.FC<MoodChipsProps> = ({ moods, onConfigureMood }) => {
+  const [moodProfile, setMoodProfile] = useState<{ [key: Mood['id']]: number }>({})
   const [showAll, setShowAll] = useState(false)
-  const moodList: MoodShape[] = Array.isArray(moods) ? (moods as MoodShape[]) : []
-  const sortedMoods = moodList.slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-  const topMoods = sortedMoods.slice(0, 3)
+  const sortedMoods = moods?.slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0)) ?? []
+  const topMoods = sortedMoods.slice(0, 4)
 
   if (topMoods.length === 0) return null
 
@@ -35,7 +37,7 @@ export const MoodChips: React.FC<MoodChipsProps> = ({ moods }) => {
           style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7), 0 0px 1px #fff' }}
           onClick={() => setShowAll(true)}
         >
-          <span>Toon alles</span>
+          <span>Adjust</span>
           <span
             aria-hidden="true"
             className="text-white text-base"
@@ -45,15 +47,13 @@ export const MoodChips: React.FC<MoodChipsProps> = ({ moods }) => {
           </span>
         </button>
       </div>
-      {/* Overlay voor alle moods */}
+      {/* Overlay for all moods */}
       {showAll && (
         <div
           id="ALL"
           className="absolute inset-0 z-[100] flex items-center justify-center pointer-events-auto"
         >
-          {/* Overlay background & blur, scrollable */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-300 animate-fade-in overflow-y-auto" />
-          {/* Content box, scrollable */}
           <div className="relative w-full h-full flex items-center justify-center">
             <div className="absolute top-4 right-6 z-[101]">
               <button
@@ -68,21 +68,61 @@ export const MoodChips: React.FC<MoodChipsProps> = ({ moods }) => {
             </div>
             <div
               className="w-full max-w-sm mx-auto bg-black/70 rounded-xl p-6 flex flex-col gap-3 shadow-2xl backdrop-blur-md overflow-y-auto z-[101]"
-              style={{ maxHeight: 'calc(100% - 48px)' }}
+              style={{ maxHeight: '100%' }}
             >
-              <h2 className="text-white text-lg font-bold mb-2 text-center">Alle moods</h2>
-              {sortedMoods.map((mood, idx) => (
-                <div
-                  key={mood.title ?? idx}
-                  className="inline-flex items-center space-x-2 rounded-full py-2 px-4 text-base text-white/90 bg-black/60 shadow"
-                  title={mood.description}
+              <h2 className="text-white text-lg font-bold mb-2 text-center">
+                Compose mood profile
+              </h2>
+              {sortedMoods.map((mood) => {
+                const key = mood.id
+
+                return (
+                  <div key={key} className="flex flex-col gap-2 mb-2">
+                    <div
+                      className="inline-flex items-center space-x-2 rounded-full py-2 px-4 text-base text-white/90 bg-black/60 shadow"
+                      title={mood.description}
+                    >
+                      <span className="font-semibold">{mood.title ?? 'Unknown'}</span>
+                      <span className="text-xs text-white/60">
+                        {(moodProfile[key] ?? mood.score ?? 0).toFixed(2)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={moodProfile[key] ?? mood.score ?? 0}
+                      onChange={(e) =>
+                        setMoodProfile((p) => ({ ...p, [key]: Number(e.target.value) }))
+                      }
+                      className="w-full accent-white h-2"
+                    />
+                  </div>
+                )
+              })}
+              <div className="sticky bottom-0 mt-4 w-full flex gap-2 z-[102]">
+                <button
+                  className="flex-1 bg-white/90 text-black font-bold py-2 rounded shadow-xl hover:bg-white"
+                  type="button"
+                  onClick={() => {
+                    onConfigureMood(moodProfile)
+                    setMoodProfile({})
+                  }}
                 >
-                  <span className="font-semibold">{mood.title ?? 'Unknown'}</span>
-                  <span className="text-xs text-white/60">
-                    {Math.round((mood.score ?? 0) * 100) / 100}
-                  </span>
-                </div>
-              ))}
+                  Save profile
+                </button>
+                <button
+                  className="flex-1 bg-black/70 text-white font-bold py-2 rounded shadow-xl hover:bg-black/90 border border-white/20"
+                  type="button"
+                  onClick={() => {
+                    setShowAll(false)
+                    setMoodProfile({})
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -148,6 +148,7 @@ export async function getAllMoods(
       title: rec.payload?.title,
       description: rec.payload?.description,
       score: rec.score,
+      id: rec.id,
     })) || []
   )
 }
