@@ -1,112 +1,209 @@
 [
   {
-    "id": "rebellious",
-    "title": "Rebellious",
-    "keywords": ["rebellious", "defiant", "provocative", "revolutionary", "anti-system"]
+    "createdAt": "2025-09-16T20:29:53.461Z",
+    "updatedAt": "2025-09-16T20:29:54.020Z",
+    "title": "neutral",
+    "description": " ",
+    "hasEmbedding": true,
+    "qdrantId": "1758054612634",
+    "id": "68c9c8c1b4cb0d3d2bc229aa"
   },
   {
-    "id": "uplifting",
-    "title": "Uplifting",
-    "keywords": ["uplifting", "hopeful", "positive", "heartwarming", "encouraging", "bright"]
-  },
-  {
-    "id": "disturbing",
-    "title": "Disturbing",
-    "keywords": ["disturbing", "unsettling", "eerie", "grotesque", "frightening", "shocking"]
-  },
-  {
-    "id": "surprising",
-    "title": "Surprising",
-    "keywords": ["surprising", "unexpected", "unpredictable", "astonishing", "inventive"]
-  },
-  {
-    "id": "conspiratorial",
-    "title": "Conspiratorial",
-    "keywords": ["conspiratorial", "secretive", "hidden", "deceptive", "political", "covert"]
-  },
-  {
-    "id": "suspenseful",
-    "title": "Suspenseful",
-    "keywords": ["suspenseful", "tense", "gripping", "nerve-racking", "edge-of-seat"]
-  },
-  {
-    "id": "romantic",
-    "title": "Romantic",
-    "keywords": ["romantic", "passionate", "loving", "tender", "affectionate", "emotional"]
-  },
-  {
-    "id": "tragic",
-    "title": "Tragic",
-    "keywords": ["tragic", "heartbreaking", "sorrowful", "devastating", "mournful"]
-  },
-  {
-    "id": "inspiring",
-    "title": "Inspiring",
-    "keywords": ["inspiring", "uplifting", "motivating", "empowering", "hopeful"]
-  },
-  {
-    "id": "shocking",
-    "title": "Shocking",
-    "keywords": ["shocking", "jarring", "brutal", "disturbing", "violent", "extreme"]
-  },
-  {
-    "id": "whimsical",
-    "title": "Whimsical",
-    "keywords": ["whimsical", "dreamy", "playful", "fantastical", "magical", "quirky"]
-  },
-  {
-    "id": "philosophical",
-    "title": "Philosophical",
-    "keywords": ["philosophical", "thoughtful", "contemplative", "existential", "profound"]
-  },
-  {
-    "id": "mysterious",
-    "title": "Mysterious",
-    "keywords": ["mysterious", "enigmatic", "hidden", "puzzling", "secretive", "cryptic"]
-  },
-  {
-    "id": "epic",
+    "createdAt": "2025-09-07T11:22:34.092Z",
+    "updatedAt": "2025-09-07T16:54:58.541Z",
     "title": "Epic",
-    "keywords": ["epic", "grand", "sweeping", "monumental", "heroic", "legendary"]
+    "description": "Epic, grand, sweeping, monumental, heroic, legendary",
+    "hasEmbedding": true,
+    "qdrantId": "1757261220170",
+    "id": "68bd6afa777ae43dfcdafe4d"
   },
   {
-    "id": "intimate",
+    "createdAt": "2025-09-07T11:22:22.197Z",
+    "updatedAt": "2025-09-07T16:55:19.501Z",
     "title": "Intimate",
-    "keywords": ["intimate", "personal", "close", "tender", "private", "heartfelt"]
+    "description": "Intimate, personal, close, tender, private, heartfelt",
+    "hasEmbedding": true,
+    "qdrantId": "1757261223313",
+    "id": "68bd6aee777ae43dfcdafe3a"
   },
   {
-    "id": "dark",
+    "createdAt": "2025-09-07T11:22:08.124Z",
+    "updatedAt": "2025-09-07T17:45:48.380Z",
     "title": "Dark",
-    "keywords": ["dark", "shadowy", "ominous", "bleak", "heavy"]
+    "description": "Dark, shadowy, ominous, bleak, heavy",
+    "hasEmbedding": true,
+    "qdrantId": "1757261158517",
+    "id": "68bd6ae0777ae43dfcdafe27"
   },
   {
-    "id": "light",
+    "createdAt": "2025-09-07T11:21:56.877Z",
+    "updatedAt": "2025-09-07T16:55:46.150Z",
     "title": "Light",
-    "keywords": ["light", "bright", "cheerful", "playful", "uplifting", "breezy"]
+    "description": "Light, bright, cheerful, playful, uplifting, breezy",
+    "hasEmbedding": true,
+    "qdrantId": "1757261169291",
+    "id": "68bd6ad4777ae43dfcdafe14"
   },
   {
-    "id": "humorous",
+    "createdAt": "2025-09-07T11:21:45.398Z",
+    "updatedAt": "2025-09-07T16:55:57.973Z",
     "title": "Humorous",
-    "keywords": ["humorous", "funny", "witty", "comic", "playful", "lighthearted"]
+    "description": "Humorous, funny, witty, comic, playful, lighthearted",
+    "hasEmbedding": true,
+    "qdrantId": "1757261245874",
+    "id": "68bd6ac9777ae43dfcdafe01"
   },
   {
-    "id": "serious",
+    "createdAt": "2025-09-07T11:21:26.095Z",
+    "updatedAt": "2025-09-07T16:56:10.221Z",
     "title": "Serious",
-    "keywords": ["serious", "solemn", "weighty", "dramatic", "earnest", "intense"]
+    "description": "Serious, solemn, weighty, dramatic, earnest, intense",
+    "hasEmbedding": true,
+    "qdrantId": "1757261196271",
+    "id": "68bd6ab6777ae43dfcdafde3"
   },
   {
-    "id": "energetic",
+    "createdAt": "2025-09-07T11:21:11.233Z",
+    "updatedAt": "2025-09-07T16:56:25.048Z",
     "title": "Energetic",
-    "keywords": ["energetic", "dynamic", "fast", "vibrant", "pulsing", "lively"]
+    "description": "Energetic, dynamic, fast, vibrant, pulsing, lively",
+    "hasEmbedding": true,
+    "qdrantId": "1757261222687",
+    "id": "68bd6aa7777ae43dfcdafdd0"
   },
   {
-    "id": "calm",
+    "createdAt": "2025-09-07T11:20:54.936Z",
+    "updatedAt": "2025-09-07T16:56:37.438Z",
     "title": "Calm",
-    "keywords": ["calm", "quiet", "still", "peaceful", "serene", "meditative"]
+    "description": "Calm, quiet, still, peaceful, serene, meditative",
+    "hasEmbedding": true,
+    "qdrantId": "1757261237541",
+    "id": "68bd6a96777ae43dfcdafdbb"
   },
   {
-    "id": "mindbending",
+    "createdAt": "2025-09-07T11:20:41.142Z",
+    "updatedAt": "2025-09-07T16:56:48.561Z",
     "title": "Mindbending",
-    "keywords": ["mindbending", "surreal", "disorienting", "brain-twisting", "reality-shifting"]
+    "description": "Mindbending, surreal, disorienting, brain-twisting, reality-shifting",
+    "hasEmbedding": true,
+    "qdrantId": "1757261227750",
+    "id": "68bd6a89777ae43dfcdafda8"
+  },
+  {
+    "createdAt": "2025-09-07T11:20:27.637Z",
+    "updatedAt": "2025-09-07T16:57:00.846Z",
+    "title": "Surprising",
+    "description": "Surprising, unexpected, unpredictable, astonishing, inventive",
+    "hasEmbedding": true,
+    "qdrantId": "1757261248096",
+    "id": "68bd6a7b777ae43dfcdafd95"
+  },
+  {
+    "createdAt": "2025-09-07T11:20:03.474Z",
+    "updatedAt": "2025-09-07T16:57:22.979Z",
+    "title": "Conspiratorial",
+    "description": "Conspiratorial, secretive, hidden, deceptive, political, covert",
+    "hasEmbedding": true,
+    "qdrantId": "1757261217908",
+    "id": "68bd6a63777ae43dfcdafd7f"
+  },
+  {
+    "createdAt": "2025-09-07T11:19:49.130Z",
+    "updatedAt": "2025-09-07T16:57:37.425Z",
+    "title": "Suspenseful",
+    "description": "Suspenseful, tense, gripping, nerve-racking, edge-of-seat",
+    "hasEmbedding": true,
+    "qdrantId": "1757261283399",
+    "id": "68bd6a55777ae43dfcdafd6c"
+  },
+  {
+    "createdAt": "2025-09-07T11:19:37.493Z",
+    "updatedAt": "2025-09-07T16:57:47.859Z",
+    "title": "Romantic",
+    "description": "Romantic, passionate, loving, tender, affectionate, emotional",
+    "hasEmbedding": true,
+    "qdrantId": "1757261213186",
+    "id": "68bd6a49777ae43dfcdafd59"
+  },
+  {
+    "createdAt": "2025-09-07T11:19:25.387Z",
+    "updatedAt": "2025-09-07T16:57:59.246Z",
+    "title": "Tragic",
+    "description": "Tragic, heartbreaking, sorrowful, devastating, mournful",
+    "hasEmbedding": true,
+    "qdrantId": "1757261246347",
+    "id": "68bd6a3d777ae43dfcdafd46"
+  },
+  {
+    "createdAt": "2025-09-07T11:19:14.083Z",
+    "updatedAt": "2025-09-07T16:58:09.374Z",
+    "title": "Inspiring",
+    "description": "Inspiring, uplifting, motivating, empowering, hopeful",
+    "hasEmbedding": true,
+    "qdrantId": "1757261263040",
+    "id": "68bd6a32777ae43dfcdafd34"
+  },
+  {
+    "createdAt": "2025-09-07T11:18:58.331Z",
+    "updatedAt": "2025-09-07T16:58:19.946Z",
+    "title": "Shocking",
+    "description": "Shocking, jarring, brutal, disturbing, violent, extreme",
+    "hasEmbedding": true,
+    "qdrantId": "1757261271666",
+    "id": "68bd6a22777ae43dfcdafd1e"
+  },
+  {
+    "createdAt": "2025-09-07T11:18:46.134Z",
+    "updatedAt": "2025-09-07T16:58:33.019Z",
+    "title": "Whimsical",
+    "description": "Whimsical, dreamy, playful, fantastical, magical, quirky",
+    "hasEmbedding": true,
+    "qdrantId": "1757261218354",
+    "id": "68bd6a16777ae43dfcdafd0b"
+  },
+  {
+    "createdAt": "2025-09-07T11:18:34.007Z",
+    "updatedAt": "2025-09-07T16:58:44.770Z",
+    "title": "Philosophical",
+    "description": "Philosophical, thoughtful, contemplative, existential, profound",
+    "hasEmbedding": true,
+    "qdrantId": "1757261210634",
+    "id": "68bd6a0a777ae43dfcdafcf8"
+  },
+  {
+    "createdAt": "2025-09-07T11:18:20.506Z",
+    "updatedAt": "2025-09-07T16:59:10.027Z",
+    "title": "Mysterious",
+    "description": "Mysterious, enigmatic, hidden, puzzling, secretive, cryptic",
+    "hasEmbedding": true,
+    "qdrantId": "1757261259396",
+    "id": "68bd69fc777ae43dfcdafce6"
+  },
+  {
+    "createdAt": "2025-09-07T11:18:08.241Z",
+    "updatedAt": "2025-09-07T16:59:21.449Z",
+    "title": "Rebellious",
+    "description": "Rebellious, defiant, provocative, revolutionary, anti-system",
+    "hasEmbedding": true,
+    "qdrantId": "1757261306100",
+    "id": "68bd69f0777ae43dfcdafcd3"
+  },
+  {
+    "createdAt": "2025-09-07T11:17:51.497Z",
+    "updatedAt": "2025-09-07T16:59:39.370Z",
+    "title": "Uplifting",
+    "description": "Uplifting, hopeful, positive, heartwarming, encouraging, bright",
+    "hasEmbedding": true,
+    "qdrantId": "1757261237413",
+    "id": "68bd69df777ae43dfcdafcc0"
+  },
+  {
+    "createdAt": "2025-09-07T11:16:33.493Z",
+    "updatedAt": "2025-09-07T16:59:50.509Z",
+    "title": "Disturbing",
+    "description": "Disturbing, unsettling, eerie, grotesque, frightening, shocking",
+    "hasEmbedding": true,
+    "qdrantId": "1757261237161",
+    "id": "68bd6991777ae43dfcdafcad"
   }
 ]
