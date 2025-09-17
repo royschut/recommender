@@ -8,6 +8,7 @@ import { ArrowKey } from './components/ArrowKey'
 import { MovieCard } from './components/MovieCard'
 import { MovieMiniatures } from './components/MovieMiniatures'
 import { useMovies } from './hooks/useMovies'
+import { MoodChips } from './MoodChips'
 import { useSwipeIndex } from './hooks/useSwipeIndex'
 import { useDragListeners } from './hooks/useDragListeners'
 import { Movie } from './Movie'
@@ -89,18 +90,10 @@ const MoodSwipe = () => {
   }
 
   const main = () => {
-    type MoodShape = { title?: string; description?: string; score?: number }
-    const moodList: MoodShape[] = Array.isArray(moods) ? (moods as MoodShape[]) : []
-
-    const topMoods = moodList
-      .slice()
-      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-      .slice(0, 3)
-
     return (
       <>
-        {/* Miniature liked/disliked movies at the top */}
         <MovieMiniatures userProfile={userProfile} allMovies={allMovies} />
+        <MoodChips moods={moods} />
 
         <div {...dragHandlers} className="absolute inset-0">
           <SwipeContainer
@@ -114,24 +107,6 @@ const MoodSwipe = () => {
             )}
           />
         </div>
-
-        {/* Top mood chips */}
-        {topMoods.length > 0 && (
-          <div className="px-4 pt-4 absolute top-20 flex-col gap-2 flex overflow-x-auto space-x-2 z-10">
-            {topMoods.map((mood, idx) => (
-              <div
-                key={mood.title ?? idx}
-                className="inline-flex items-center space-x-2 rounded-full bg-white/6 py-1.5 px-3 text-sm text-white/90"
-                title={mood.description}
-              >
-                <span className="font-medium">{mood.title ?? 'Unknown'}</span>
-                <span className="text-xs text-white/60">
-                  {Math.round((mood.score ?? 0) * 100) / 100}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Swipe Feedback Overlay - for like/dislike gestures */}
         {(isLiking || isDisliking) && (

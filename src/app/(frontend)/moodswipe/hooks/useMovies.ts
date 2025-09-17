@@ -73,6 +73,7 @@ export function useMovies(enabled = true) {
       })
       return await res.json()
     },
+    placeholderData: (previousData) => previousData,
     enabled,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

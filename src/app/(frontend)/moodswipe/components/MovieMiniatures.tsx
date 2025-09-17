@@ -40,7 +40,7 @@ export const MovieMiniatures: React.FC<MovieMiniaturesProps> = ({ userProfile, a
   }
 
   return (
-    <div className="absolute top-4 left-4 right-4 z-40 flex justify-between">
+    <div className="absolute top-4 left-4 right-4 z-40 flex flex-col justify-between gap-2 drop-shadow-2xl">
       {/* Liked movies miniatures */}
       {likedMovies.length > 0 && (
         <div className="flex -space-x-4 relative items-end">
@@ -75,7 +75,7 @@ export const MovieMiniatures: React.FC<MovieMiniaturesProps> = ({ userProfile, a
 
       {/* Disliked movies miniatures */}
       {dislikedMovies.length > 0 && (
-        <div className="flex -space-x-4 relative items-end justify-end">
+        <div className="flex -space-x-4 relative items-end">
           {dislikedMovies.map((movie, index) => (
             <div
               key={`disliked-${movie.id}-${index}`}
