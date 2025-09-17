@@ -54,7 +54,4 @@ cd mood-explore
 cp .env.example .env     # fill in values
 docker compose up -d     # starts Qdrant, Payload (Mongo), and the app
 
-# Seed data
-pnpm ts-node scripts/seed-movies.ts
-pnpm ts-node scripts/seed-moods.ts
 ```
