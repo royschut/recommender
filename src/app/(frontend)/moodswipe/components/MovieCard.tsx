@@ -8,6 +8,8 @@ interface MovieCardProps {
 }
 
 export const MovieCard: React.FC<MovieCardProps> = ({ movie, isActive, isSwipping }) => {
+  if (!movie) return null
+
   return (
     <>
       <img
